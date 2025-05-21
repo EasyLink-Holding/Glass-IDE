@@ -54,6 +54,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      - name: Update Rust toolchain
+        run: rustup update && rustup default stable
+      
       - name: Install Rust components
         run: rustup component add rustfmt clippy
         

@@ -1,5 +1,0 @@
-. Ubuntu Dependencies in CI
-For a Tauri app, we do need system dependencies to compile, but there are more efficient approaches for CI:
-
-We could use a pre-built Docker image that already has the Tauri dependencies installed
-We could simplify the install process by only including critical dependencies

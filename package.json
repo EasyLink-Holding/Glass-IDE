@@ -4,10 +4,20 @@
   "version": "0.0.0",
   "description": "Workspace root for Glass IDE (Tauri + React)",
   "scripts": {
-    "dev": "pnpm --filter ./frontend dev",
-    "build": "pnpm --filter ./frontend build",
-    "typecheck": "pnpm --filter ./frontend run typecheck"
+    "dev": "cd frontend && pnpm dev",
+    "build": "cd frontend && pnpm build",
+    "typecheck": "cd frontend && pnpm typecheck",
+    "lint": "cd frontend && pnpm lint",
+    "format": "cd frontend && pnpm format",
+    "check": "cd frontend && pnpm check",
+    "rustcheck": "cd src-tauri && cargo check"
   },
   "workspaces": ["frontend"],
-  "packageManager": "pnpm@10.8.1"
+  "packageManager": "pnpm@10.8.1",
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4"
+  },
+  "dependencies": {
+    "react": "^19.1.0"
+  }
 }

@@ -5,17 +5,21 @@
   "identifier": "com.tauri.dev",
   "build": {
     "frontendDist": "../frontend/dist",
+    "devUrl": "http://localhost:5173/",
     "beforeDevCommand": "pnpm --filter ./frontend dev",
     "beforeBuildCommand": "pnpm --filter ./frontend build"
   },
   "app": {
+    "macOSPrivateApi": true,
     "windows": [
       {
-        "title": "glass-ide-root",
+        "title": "main",
         "width": 800,
         "height": 600,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "transparent": true,
+        "decorations": false
       }
     ],
     "security": {

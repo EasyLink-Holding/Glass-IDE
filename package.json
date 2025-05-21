@@ -1,0 +1,13 @@
+{
+  "name": "glass-ide-root",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Workspace root for Glass IDE (Tauri + React)",
+  "scripts": {
+    "dev": "pnpm --filter ./frontend dev",
+    "build": "pnpm --filter ./frontend build",
+    "typecheck": "pnpm --filter ./frontend run typecheck"
+  },
+  "workspaces": ["frontend"],
+  "packageManager": "pnpm@10.8.1"
+}

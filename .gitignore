@@ -1,0 +1,22 @@
+# Node / JS
+node_modules/
+*.log
+pnpm-lock.yaml
+
+# Vite build output
+frontend/dist/
+web-ui/dist/
+
+# Rust / Cargo
+src-tauri/target/
+Cargo.lock
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Tauri
+src-tauri/.cargo/

@@ -78,12 +78,13 @@ jobs:
         run: cargo check --quiet
 
   build:
+    # Only run if CI checks pass
     needs: [frontend-checks, rust-checks]
     strategy:
       fail-fast: false
       matrix:
         platform: [macos-latest, ubuntu-latest, windows-latest]
-
+    
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
@@ -114,37 +115,33 @@ jobs:
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
 
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
 
-      - name: Setup container (ubuntu only)
+      # Install Ubuntu dependencies
+      - name: Install dependencies (Ubuntu only)
         if: matrix.platform == 'ubuntu-latest'
-        uses: docker://ivangabriele/tauri:debian-bookworm-18
-        with:
-          args: echo "Using pre-configured Tauri container"
-
-      - name: Install frontend dependencies
-        run: pnpm install
-        
-      - name: Update bundle identifier
         run: |
-          if grep -q '"identifier": "com.tauri.dev"' ./src-tauri/tauri.conf.json; then
-            if [[ "${{ runner.os }}" == "macOS" ]]; then
-              sed -i '' 's/"identifier": "com.tauri.dev"/"identifier": "io.glasstech.ide"/' ./src-tauri/tauri.conf.json
-            else
-              sed -i 's/"identifier": "com.tauri.dev"/"identifier": "io.glasstech.ide"/' ./src-tauri/tauri.conf.json
-            fi
-          fi
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev
 
+      # Install frontend dependencies and build
+      - name: Install dependencies
+        run: pnpm install
+
+      # Build the frontend first
+      - name: Build frontend
+        run: pnpm --filter ./frontend build
+
+      # Use Tauri Action to build the app
       - uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: app-v__VERSION__
-          releaseName: 'App v__VERSION__'
-          releaseBody: 'See the assets to download this version and install.'
-          releaseDraft: true
-          prerelease: false
+          # Use our own bundle identifier (the bundleIdentifier option works with tauri-action)
+          bundleIdentifier: io.glasstech.ide

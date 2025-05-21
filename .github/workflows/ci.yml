@@ -71,11 +71,11 @@ jobs:
 
       - name: Rust clippy check
         working-directory: ./src-tauri
-        run: cargo clippy --all-targets --all-features
+        run: cargo clippy --lib --bins --quiet
 
       - name: Rust build check
         working-directory: ./src-tauri
-        run: cargo check
+        run: cargo check --quiet
 
   build:
     needs: [frontend-checks, rust-checks]

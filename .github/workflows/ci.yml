@@ -63,18 +63,15 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: .
 
       - name: Rust format check
-        working-directory: ./src-tauri
         run: cargo fmt --check
 
       - name: Rust clippy check
-        working-directory: ./src-tauri
-        run: cargo clippy --lib --bins --quiet
+        run: cargo clippy --workspace --quiet
 
       - name: Rust build check
-        working-directory: ./src-tauri
         run: cargo check --quiet
 
   build:
@@ -121,7 +118,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
+          workspaces: .
 
       # Install Ubuntu dependencies
       - name: Install dependencies (Ubuntu only)

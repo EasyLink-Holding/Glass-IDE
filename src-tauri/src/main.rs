@@ -7,10 +7,7 @@ fn main() {
     tauri::Builder::default()
         .setup(|app| {
             #[cfg_attr(
-                not(any(
-                    target_os = "macos",
-                    target_os = "windows"
-                )),
+                not(any(target_os = "macos", target_os = "windows")),
                 allow(unused_variables)
             )]
             let window = app.get_webview_window("main").unwrap();

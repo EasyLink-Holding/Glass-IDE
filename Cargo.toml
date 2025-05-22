@@ -1,0 +1,9 @@
+[workspace]
+resolver = "2"
+members = [
+    "src-tauri",
+]
+
+# This top-level workspace file allows running Cargo commands from the project root,
+# e.g. `cargo fmt`, `cargo clippy`, etc. Only the Rust crate in `src-tauri` is
+# included so it won’t interfere with the JavaScript/Node frontend.

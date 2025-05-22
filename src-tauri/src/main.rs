@@ -19,7 +19,7 @@ fn main() {
                     &window,
                     NSVisualEffectMaterial::HudWindow,
                     None,
-                    None,
+                    Some(8.0),
                 ) {
                     eprintln!("Couldn't apply vibrancy effect: {}", err);
                 }

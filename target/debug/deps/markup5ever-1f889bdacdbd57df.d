@@ -1,0 +1,15 @@
+/Users/naaiyy/Developer/Glass-IDE/target/debug/deps/libmarkup5ever-1f889bdacdbd57df.rmeta: /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/lib.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/data/mod.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/mod.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/tree_builder.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/serialize.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/buffer_queue.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/smallcharset.rs /Users/naaiyy/Developer/Glass-IDE/target/debug/build/markup5ever-9a7e2a7acdf3600e/out/generated.rs /Users/naaiyy/Developer/Glass-IDE/target/debug/build/markup5ever-9a7e2a7acdf3600e/out/named_entities.rs
+
+/Users/naaiyy/Developer/Glass-IDE/target/debug/deps/markup5ever-1f889bdacdbd57df.d: /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/lib.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/data/mod.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/mod.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/tree_builder.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/serialize.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/buffer_queue.rs /Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/smallcharset.rs /Users/naaiyy/Developer/Glass-IDE/target/debug/build/markup5ever-9a7e2a7acdf3600e/out/generated.rs /Users/naaiyy/Developer/Glass-IDE/target/debug/build/markup5ever-9a7e2a7acdf3600e/out/named_entities.rs
+
+/Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/lib.rs:
+/Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/data/mod.rs:
+/Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/mod.rs:
+/Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/interface/tree_builder.rs:
+/Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/serialize.rs:
+/Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/buffer_queue.rs:
+/Users/naaiyy/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/markup5ever-0.11.0/util/smallcharset.rs:
+/Users/naaiyy/Developer/Glass-IDE/target/debug/build/markup5ever-9a7e2a7acdf3600e/out/generated.rs:
+/Users/naaiyy/Developer/Glass-IDE/target/debug/build/markup5ever-9a7e2a7acdf3600e/out/named_entities.rs:
+
+# env-dep:OUT_DIR=/Users/naaiyy/Developer/Glass-IDE/target/debug/build/markup5ever-9a7e2a7acdf3600e/out

@@ -72,3 +72,10 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Rounded corners to match macOS window shape */
+html,
+body {
+  border-radius: 8px;
+  overflow: hidden;
+}

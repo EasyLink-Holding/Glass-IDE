@@ -71,7 +71,7 @@ jobs:
         run: cargo fmt --check
 
       - name: Rust clippy check
-        run: cargo clippy --workspace --quiet
+        run: cargo clippy --workspace --no-deps --quiet
 
   build:
     # Build artefacts only for tag pushes (release builds)
@@ -80,7 +80,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        platform: [macos-latest, ubuntu-latest, windows-latest]
+        platform: [macos-latest]
     
     runs-on: ${{ matrix.platform }}
     steps:

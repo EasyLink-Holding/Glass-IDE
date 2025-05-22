@@ -4,10 +4,14 @@ node_modules/
 pnpm-lock.yaml
 
 # Vite build output
+dist/
+*/dist/
 frontend/dist/
 web-ui/dist/
 
 # Rust / Cargo
+target/
+*/target/
 src-tauri/target/
 Cargo.lock
 

@@ -4,7 +4,7 @@
     "enabled": true
   },
   "files": {
-    "ignore": ["**/tsconfig*.json"]
+    "ignore": ["**/tsconfig*.json", "**/dist/**", "**/target/**"]
   },
   "linter": {
     "enabled": true,

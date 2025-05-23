@@ -14,11 +14,11 @@ fn main() {
 
             #[cfg(target_os = "macos")]
             {
-                use window_vibrancy::NSVisualEffectMaterial;
+                use window_vibrancy::{NSVisualEffectMaterial, NSVisualEffectState};
                 if let Err(err) = window_vibrancy::apply_vibrancy(
                     &window,
-                    NSVisualEffectMaterial::HudWindow,
-                    None,
+                    NSVisualEffectMaterial::FullScreenUI,
+                    Some(NSVisualEffectState::Active),
                     Some(8.0),
                 ) {
                     eprintln!("Couldn't apply vibrancy effect: {}", err);

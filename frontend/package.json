@@ -15,12 +15,14 @@
   "dependencies": {
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "@tauri-apps/api": "^2.0.0-alpha.11"
+    "@tauri-apps/api": "^2.0.0-alpha.11",
+    "phosphor-react": "^1.4.1"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react-swc": "^3.5.1",
     "@vitejs/plugin-react": "^4.4.1",
     "typescript": "~5.8.3",
     "vite": "^6.3.5",

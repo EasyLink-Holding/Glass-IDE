@@ -11,8 +11,8 @@ interface Props {
 export default function MainContainer({ children }: Props) {
   return (
     /**
-    * Defines margins between panes inside the main container (gap-2 & p-2)
-    * */
+     * Defines margins between panes inside the main container (gap-2 & p-2)
+     * */
     <div className="flex h-full w-full gap-2 rounded-lg border border-neutral-700 bg-neutral-800/60 p-2 backdrop-blur">
       {children}
     </div>

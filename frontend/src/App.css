@@ -7,6 +7,7 @@ body,
   margin: 0;
   padding: 0;
   overflow: hidden;
+  -webkit-app-region: drag;
 }
 
 #root {
@@ -23,4 +24,13 @@ body {
 /* Force proper box sizing on all elements */
 * {
   box-sizing: border-box;
+}
+
+/* Exclude interactive elements from drag region */
+button,
+input,
+textarea,
+a,
+[data-no-drag] {
+  -webkit-app-region: no-drag;
 }

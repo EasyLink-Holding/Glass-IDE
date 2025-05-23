@@ -1,8 +1,9 @@
 import './index.css';
 import './App.css';
+import AppLayout from './AppLayout';
 
 function App() {
-  return <div>{/* Future IDE panes will mount here */}</div>;
+  return <AppLayout />;
 }
 
 export default App;

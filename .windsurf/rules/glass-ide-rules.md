@@ -14,3 +14,6 @@ Javascript / Typescript
 Rust
 Tauri
 React
+
+
+Take habit of leaving clear comments in the code, when implementing, refactoring etc...

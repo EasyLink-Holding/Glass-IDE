@@ -1,4 +1,5 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { useSettings } from '../../lib/settings/store';
 
 const win = getCurrentWindow();
 
@@ -15,6 +16,9 @@ const btnBase = [
 ].join(' ');
 
 export default function WindowControls() {
+  const hide = useSettings((s) => s.hideSystemControls);
+  if (hide) return null;
+
   return (
     <div className="flex items-center" data-no-drag>
       <button

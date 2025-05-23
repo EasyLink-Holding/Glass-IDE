@@ -1,14 +1,17 @@
-import { Folders, GearSix } from 'phosphor-react';
+import { Folders, GearSix, Sliders } from 'phosphor-react';
 import NavItem from './NavItem';
 
+type SectionId = 'general' | 'workspace' | 'customization';
+
 interface Props {
-  current: 'general' | 'workspace';
-  onSelect(id: 'general' | 'workspace'): void;
+  current: SectionId;
+  onSelect(id: SectionId): void;
 }
 
 const items = [
   { id: 'general', label: 'General', icon: GearSix },
   { id: 'workspace', label: 'Workspace', icon: Folders },
+  { id: 'customization', label: 'Customization', icon: Sliders },
 ] as const;
 
 export default function SettingsNav({ current, onSelect }: Props) {

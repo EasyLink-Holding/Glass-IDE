@@ -1,11 +1,13 @@
 import { Suspense, useMemo, useState } from 'react';
 import SettingsNav from './navigation/SettingsNav';
+import CustomizationSection from './sections/Customization/CustomizationSection';
 import GeneralSection from './sections/General/GeneralSection';
 import WorkspaceSection from './sections/Workspace/WorkspaceSection';
 
 const sectionMap = {
   general: GeneralSection,
   workspace: WorkspaceSection,
+  customization: CustomizationSection,
 } as const;
 
 type SectionId = keyof typeof sectionMap;

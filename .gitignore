@@ -23,5 +23,8 @@ Cargo.lock
 .vscode/
 .windsurf
 
+# Documentation
+docs/
+
 # Tauri
 src-tauri/.cargo/

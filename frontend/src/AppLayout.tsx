@@ -1,7 +1,5 @@
+import DynamicLayout from './components/layout/DynamicLayout';
 import MainContainer from './components/layout/MainContainer';
-import ChatPane from './components/layout/chat/ChatPane';
-import ExplorerPane from './components/layout/explorer/ExplorerPane';
-import MainPane from './components/layout/main/MainPane';
 import SideNavigationPane from './components/navigation/SideNavigationPane';
 import TopNavigationPane from './components/navigation/TopNavigationPane';
 
@@ -13,9 +11,7 @@ export default function AppLayout() {
       <div className="flex flex-1 justify-center gap-2">
         <SideNavigationPane />
         <MainContainer>
-          <ExplorerPane />
-          <MainPane />
-          <ChatPane />
+          <DynamicLayout />
         </MainContainer>
       </div>
     </div>

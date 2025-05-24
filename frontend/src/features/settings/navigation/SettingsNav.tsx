@@ -1,7 +1,7 @@
-import { Folders, GearSix, Sliders } from 'phosphor-react';
+import { Folders, GearSix, Keyboard, Sliders } from 'phosphor-react';
 import NavItem from './NavItem';
 
-type SectionId = 'general' | 'workspace' | 'customization';
+type SectionId = 'general' | 'workspace' | 'customization' | 'shortcuts';
 
 interface Props {
   current: SectionId;
@@ -12,6 +12,7 @@ const items = [
   { id: 'general', label: 'General', icon: GearSix },
   { id: 'workspace', label: 'Workspace', icon: Folders },
   { id: 'customization', label: 'Customization', icon: Sliders },
+  { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
 ] as const;
 
 export default function SettingsNav({ current, onSelect }: Props) {
@@ -21,7 +22,7 @@ export default function SettingsNav({ current, onSelect }: Props) {
         <NavItem
           key={item.id}
           active={current === item.id}
-          onClick={() => onSelect(item.id)}
+          onClick={() => onSelect(item.id as SectionId)}
           label={item.label}
           Icon={item.icon}
         />

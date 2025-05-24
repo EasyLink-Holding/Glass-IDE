@@ -12,7 +12,16 @@ fn main() {
                 not(any(target_os = "macos", target_os = "windows")),
                 allow(unused_variables)
             )]
-            let window = app.get_webview_window("main").unwrap();
+            let window = match app.get_webview_window("main") {
+                Some(win) => win,
+                None => {
+                    eprintln!(
+                        "Error: Could not get main window. Visual effects will not be applied."
+                    );
+                    // Exit setup gracefully, allowing the app to continue running without these effects.
+                    return Ok(());
+                }
+            };
 
             #[cfg(target_os = "macos")]
             {

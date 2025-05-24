@@ -2,6 +2,7 @@ import { type SetState, type StateCreator, create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PersistOptions } from 'zustand/middleware';
 import { DEFAULT_PANE_SLOT_MAP, DEFAULT_TEMPLATE } from '../layout/defaults';
+import { DEFAULT_SHORTCUTS } from '../shortcuts/shortcuts';
 import { type SettingKey, type Settings, defaultSettings } from './schema';
 
 interface Store extends Settings {
@@ -17,6 +18,8 @@ const creator: StateCreator<Store> = (set: SetState<Store>) => ({
     set({
       activeTemplateId: DEFAULT_TEMPLATE,
       paneSlotMap: DEFAULT_PANE_SLOT_MAP,
+      hiddenPanes: { explorer: false, editor: false, console: false },
+      shortcuts: { ...DEFAULT_SHORTCUTS },
     }),
 });
 

@@ -11,11 +11,11 @@ function renderNode(
 ): ReactElement {
   if (node.type === 'slot') {
     const content = slotToPane[node.id] ?? null;
-    return content ? (
-      <div className="flex flex-1 h-full w-full min-w-0 min-h-0">{content}</div>
-    ) : (
-      <div className="flex flex-1 h-full w-full min-w-0 min-h-0 rounded-lg border border-dashed border-neutral-700" />
-    );
+    if (content) {
+      return <div className="flex flex-1 h-full w-full min-w-0 min-h-0">{content}</div>;
+    }
+    // Empty slot placeholder – keep flex sizing but no visual border
+    return <div className="flex flex-1 h-full w-full min-w-0 min-h-0" />;
   }
 
   const isRow = node.dir === 'row';
@@ -38,16 +38,18 @@ function renderNode(
 export default function DynamicLayout() {
   const activeTemplateId = useSettings((s) => s.activeTemplateId);
   const paneSlotMap = useSettings((s) => s.paneSlotMap);
+  const hiddenPanes = useSettings((s) => s.hiddenPanes);
 
   const { template, slotToPane } = useMemo(() => {
     const template = templates.find((t) => t.id === activeTemplateId) ?? templates[0];
     const slotToPane: Record<string, ReactElement | null> = {};
     for (const [paneId, slotId] of Object.entries(paneSlotMap)) {
+      if (hiddenPanes[paneId as PaneId]) continue; // skip hidden
       const element = paneRegistry[paneId as PaneId];
       if (element) slotToPane[slotId] = element;
     }
     return { template, slotToPane };
-  }, [activeTemplateId, paneSlotMap]);
+  }, [activeTemplateId, paneSlotMap, hiddenPanes]);
 
   return <div className="flex h-full w-full">{renderNode(template.root, slotToPane)}</div>;
 }

@@ -4,7 +4,7 @@ import type { LayoutNode, LayoutTemplate, PaneId } from '../../../../../lib/layo
 interface Props {
   template: LayoutTemplate;
   selectedPane: PaneId | null;
-  paneNames: Record<string, string>; // paneId -> slotId mapping (for filled name display)
+  paneNames: Record<PaneId, string>; // paneId -> slotId mapping (for filled name display)
   onSelect(slotId: string): void;
 }
 
@@ -62,8 +62,7 @@ export default function SlotVisualizer({ template, selectedPane, paneNames, onSe
         {node.children.map((child, idx) => (
           <div
             key={child.type === 'slot' ? `slot-${child.id}` : `split-${idx}`}
-            style={{ flex: ratios ? `${ratios[idx]} 1 0%` : '1 1 0%' }}
-            className="flex"
+            className={`flex grow-${ratios ? ratios[idx] : 1}`}
           >
             {renderNode(child)}
           </div>
@@ -73,7 +72,7 @@ export default function SlotVisualizer({ template, selectedPane, paneNames, onSe
   }
 
   return (
-    <div className="h-48 w-72 overflow-hidden border border-neutral-700">
+    <div className="h-48 flex-1 max-w-[18rem] min-w-0 overflow-hidden border border-neutral-700">
       {renderNode(template.root)}
     </div>
   );

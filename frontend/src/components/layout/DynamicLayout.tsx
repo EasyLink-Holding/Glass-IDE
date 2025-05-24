@@ -1,18 +1,9 @@
 import type { ReactElement } from 'react';
+import { useMemo } from 'react';
+import { paneRegistry } from '../../lib/layout/paneRegistry';
 import { templates } from '../../lib/layout/templates';
-import type { LayoutNode } from '../../lib/layout/types';
+import type { LayoutNode, PaneId } from '../../lib/layout/types';
 import { useSettings } from '../../lib/settings/store';
-
-import ChatPane from './chat/ChatPane';
-// Pane components
-import ExplorerPane from './explorer/ExplorerPane';
-import MainPane from './main/MainPane';
-
-const paneRegistry: Record<string, ReactElement> = {
-  explorer: <ExplorerPane />,
-  editor: <MainPane />,
-  console: <ChatPane />,
-};
 
 function renderNode(
   node: LayoutNode,
@@ -35,14 +26,7 @@ function renderNode(
       {node.children.map((child, idx) => (
         <div
           key={child.type === 'slot' ? `slot-${child.id}` : `split-${idx}`}
-          /*
-           * Each split child is wrapped once so we can control its flex-grow ratio.
-           * It must also stretch to fill the cross-axis of the parent container
-           * and allow shrinking, otherwise nested column/row templates (e.g.
-           * "stacked", "two left stacked") will collapse to intrinsic width.
-           */
-          style={{ flex: ratios ? `${ratios[idx]} 1 0%` : '1 1 0%' }}
-          className="flex w-full h-full min-w-0 min-h-0"
+          className={`flex min-w-0 min-h-0 grow-${ratios ? ratios[idx] : 1}`}
         >
           {renderNode(child, slotToPane)}
         </div>
@@ -55,14 +39,15 @@ export default function DynamicLayout() {
   const activeTemplateId = useSettings((s) => s.activeTemplateId);
   const paneSlotMap = useSettings((s) => s.paneSlotMap);
 
-  const template = templates.find((t) => t.id === activeTemplateId) ?? templates[0];
-
-  // Build slot -> pane mapping
-  const slotToPane: Record<string, ReactElement | null> = {};
-  for (const [paneId, slotId] of Object.entries(paneSlotMap)) {
-    const element = paneRegistry[paneId];
-    if (element) slotToPane[slotId] = element;
-  }
+  const { template, slotToPane } = useMemo(() => {
+    const template = templates.find((t) => t.id === activeTemplateId) ?? templates[0];
+    const slotToPane: Record<string, ReactElement | null> = {};
+    for (const [paneId, slotId] of Object.entries(paneSlotMap)) {
+      const element = paneRegistry[paneId as PaneId];
+      if (element) slotToPane[slotId] = element;
+    }
+    return { template, slotToPane };
+  }, [activeTemplateId, paneSlotMap]);
 
   return <div className="flex h-full w-full">{renderNode(template.root, slotToPane)}</div>;
 }

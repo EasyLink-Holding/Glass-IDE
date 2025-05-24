@@ -13,7 +13,7 @@ export default function LayoutSubSection() {
   const setSettings = useSettings((s) => s.set);
 
   const [localTemplate, setLocalTemplate] = useState<string>(activeTemplateId);
-  const [localMap, setLocalMap] = useState<Record<string, string>>(paneSlotMap);
+  const [localMap, setLocalMap] = useState<Record<PaneId, string>>(paneSlotMap);
   const dirty =
     localTemplate !== activeTemplateId || JSON.stringify(localMap) !== JSON.stringify(paneSlotMap);
 
@@ -38,12 +38,17 @@ export default function LayoutSubSection() {
   return (
     <div className="rounded border border-neutral-700 p-4 space-y-4">
       <h3 className="font-medium">Layout</h3>
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-neutral-300">Template:</span>
-        <TemplatePicker value={localTemplate} onChange={setLocalTemplate} />
-      </div>
-      <div className="flex gap-4">
+      <div className="space-y-4">
+        {/* Template selector */}
+        <div className="space-y-1">
+          <span className="text-sm text-neutral-300">Template:</span>
+          <TemplatePicker value={localTemplate} onChange={setLocalTemplate} />
+        </div>
+
+        {/* Pane list */}
         <PaneList selected={selected} onSelect={setSelected} />
+
+        {/* Slot visualiser */}
         <SlotVisualizer
           template={template}
           selectedPane={selected}

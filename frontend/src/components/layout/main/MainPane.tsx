@@ -27,7 +27,7 @@ export default function MainPane() {
   }
 
   return (
-    <main className="flex-1 rounded-lg border border-neutral-700 bg-neutral-900/60 p-2 text-neutral-100">
+    <main className="flex-1 min-w-0 overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900/60 p-2 text-neutral-100">
       <Suspense fallback={<div className="p-4 text-neutral-400">Loading…</div>}>{content}</Suspense>
     </main>
   );

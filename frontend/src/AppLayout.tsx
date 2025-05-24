@@ -8,7 +8,7 @@ export default function AppLayout() {
   return (
     <div className="flex h-screen w-screen flex-col gap-2 p-2">
       <TopNavigationPane />
-      <div className="flex flex-1 justify-center gap-2">
+      <div className="flex flex-1 min-w-0 gap-2 overflow-hidden">
         <SideNavigationPane />
         <MainContainer>
           <DynamicLayout />

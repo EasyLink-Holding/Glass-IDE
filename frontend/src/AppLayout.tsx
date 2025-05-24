@@ -1,6 +1,6 @@
 import DynamicLayout from './components/layout/DynamicLayout';
 import MainContainer from './components/layout/MainContainer';
-import SideNavigationPane from './components/navigation/SideNavigationPane';
+import SideNavigationPane from './components/navigation/Side Nav/SideNavigationPane';
 import TopNavigationPane from './components/navigation/TopNavigationPane';
 
 // App wrapper: provides small margin around entire UI

@@ -1,6 +1,6 @@
 import Select, { type SelectOption } from '../../../../../components/ui/buttons/Select';
 import type { SpaceId } from '../../../../../lib/layout/types';
-import { SPACES } from '../../../../../lib/layout/types';
+import { SPACES, isSpaceId } from '../../../../../lib/layout/types';
 
 interface Props {
   currentSpace: SpaceId;
@@ -16,7 +16,11 @@ export default function SpaceSelector({ currentSpace, onSpaceChange }: Props) {
       <span className="text-sm text-neutral-300">Configure layout for:</span>
       <Select
         value={currentSpace}
-        onChange={(v) => onSpaceChange(v as SpaceId)}
+        onChange={(v) => {
+          if (isSpaceId(v)) {
+            onSpaceChange(v);
+          }
+        }}
         options={SPACES.map(
           (s): SelectOption => ({
             value: s,

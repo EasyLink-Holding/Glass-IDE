@@ -3,8 +3,8 @@
 
 import { DEFAULT_SPACE_TEMPLATE_MAP } from '../layout/defaults';
 import type { PaneId, SpaceId } from '../layout/types';
-import type { ShortcutMap } from '../shortcuts/shortcuts';
-import { DEFAULT_SHORTCUTS } from '../shortcuts/shortcuts';
+import type { ShortcutMap } from '../shortcuts/bindings';
+import { DEFAULT_SHORTCUTS } from '../shortcuts/bindings';
 
 export interface Settings {
   // UI Settings

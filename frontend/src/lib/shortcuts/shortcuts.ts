@@ -3,8 +3,10 @@ import hotkeys from 'hotkeys-js';
 import { useEffect, useRef } from 'react';
 import { switchSpace, toggleSettings } from '../../contexts/ViewContext';
 import type { PaneId } from '../layout/types';
-// Import shortcut settings from our new specialized store
+// Import layout store for pane functions
 import { useLayoutStore } from '../settings/layoutStore';
+// Import shortcut settings from the specialized shortcut store
+import { useShortcutsStore } from '../settings/shortcutsStore';
 import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS, type ShortcutMap } from './bindings';
 // We need to type check the action IDs but the IDE can handle it now
 import { MOD, formatShortcut, isMac } from './utils';
@@ -27,8 +29,13 @@ export function registerShortcut(actionId: ActionId, handler: () => void) {
  * Place once near the root (e.g. in App component).
  */
 export function useShortcutListener() {
-  // Use shortcuts from the layout store
-  const shortcuts = useLayoutStore((state) => state.shortcuts);
+  // Use shortcuts from the dedicated shortcuts store
+  // Safely access shortcuts with fallback to DEFAULT_SHORTCUTS if not available
+  const shortcuts = useShortcutsStore((state) => state.shortcuts) || DEFAULT_SHORTCUTS;
+
+  // Configure hotkeys to work everywhere, including in input fields and content editable elements
+  // This is crucial for shortcuts to work in the editor space
+  hotkeys.filter = () => true;
 
   // Track key combinations bound by this hook instance so we can unbind them
   // precisely during re-binds and when the component unmounts.
@@ -41,23 +48,36 @@ export function useShortcutListener() {
     }
     boundKeysRef.current = [];
 
-    for (const [actionId, keyCombo] of Object.entries(shortcuts) as [ActionId, string][]) {
-      if (!keyCombo) continue;
+    // Safety check - ensure shortcuts object exists before trying to iterate
+    if (!shortcuts) {
+      console.warn('[GLASS-IDE] Shortcuts object is undefined or null, using defaults');
+      return;
+    }
 
-      hotkeys(keyCombo, (e: KeyboardEvent) => {
-        e.preventDefault();
-        const fn = actionHandlers[actionId];
-        if (fn) {
-          try {
-            fn();
-          } catch (err) {
-            // eslint-disable-next-line no-console
-            console.error(`Error executing shortcut '${actionId}':`, err);
+    try {
+      // Use safe version of Object.entries with type checking
+      for (const entry of Object.entries(shortcuts)) {
+        if (!entry || entry.length !== 2) continue;
+
+        const [actionId, keyCombo] = entry as [ActionId, string];
+        if (!keyCombo) continue;
+
+        hotkeys(keyCombo, (e: KeyboardEvent) => {
+          e.preventDefault();
+          const fn = actionHandlers[actionId];
+          if (fn) {
+            try {
+              fn();
+            } catch (err) {
+              console.error(`[GLASS-IDE] Error executing shortcut '${actionId}':`, err);
+            }
           }
-        }
-      });
+        });
 
-      boundKeysRef.current.push(keyCombo);
+        boundKeysRef.current.push(keyCombo);
+      }
+    } catch (error) {
+      console.error('[GLASS-IDE] Error setting up shortcuts:', error);
     }
 
     // Clean-up when the component unmounts.
@@ -75,9 +95,15 @@ export function useShortcutListener() {
 // -----------------------------------------------------------------------------
 
 function togglePane(paneId: PaneId) {
-  const store = useLayoutStore.getState();
-  const hidden = store.hiddenPanes ?? ({} as Record<PaneId, boolean>);
-  store.setHiddenPanes({ ...hidden, [paneId]: !hidden[paneId] });
+  // Get current state from layout store
+  const layoutStore = useLayoutStore.getState();
+  const currentHiddenState = layoutStore.hiddenPanes;
+
+  // Toggle the visibility of the specified pane
+  layoutStore.setHiddenPanes({
+    ...currentHiddenState,
+    [paneId]: !currentHiddenState[paneId],
+  });
 }
 
 export function setupPaneShortcuts() {

@@ -1,8 +1,6 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useAppearanceStore } from '../../lib/settings/appearanceStore';
-
-const win = getCurrentWindow();
 
 /*
  * macOS traffic-light spec (NSWindow):
@@ -16,30 +14,86 @@ const btnBase = [
   'appearance-none p-0 border-0', // remove UA padding that caused pill shape
 ].join(' ');
 
+/**
+ * Window control buttons (macOS style)
+ *
+ * Important: Tauri window API is initialized inside useEffect to ensure
+ * the IPC bridge is ready before making any calls.
+ */
 function WindowControls() {
   const hide = useAppearanceStore((state) => state.hideSystemControls);
-  if (hide) return null;
+  // Track window API state
+  const [windowInstance, setWindowInstance] = useState<ReturnType<typeof getCurrentWindow> | null>(
+    null
+  );
+  const [isApiReady, setIsApiReady] = useState(false);
+
+  // Initialize window API after component mounts
+  useEffect(() => {
+    // Safely initialize window API
+    try {
+      const win = getCurrentWindow();
+      setWindowInstance(win);
+      setIsApiReady(true);
+    } catch (error) {
+      console.error('[WindowControls] Failed to initialize window API:', error);
+      setIsApiReady(false);
+    }
+
+    // Cleanup function not needed as this is initialization only
+  }, []);
+
+  // Don't render controls if hidden or API not ready
+  if (hide || !isApiReady || !windowInstance) return null;
+
+  // Safe window operations with error handling
+  const safeClose = () => {
+    try {
+      windowInstance.close();
+    } catch (error) {
+      console.error('[WindowControls] Failed to close window:', error);
+    }
+  };
+
+  const safeMinimize = () => {
+    try {
+      windowInstance.minimize();
+    } catch (error) {
+      console.error('[WindowControls] Failed to minimize window:', error);
+    }
+  };
+
+  const safeToggleMaximize = async () => {
+    try {
+      const isMaximized = await windowInstance.isMaximized();
+      if (isMaximized) {
+        await windowInstance.unmaximize();
+      } else {
+        await windowInstance.maximize();
+      }
+    } catch (error) {
+      console.error('[WindowControls] Failed to toggle maximize:', error);
+    }
+  };
 
   return (
     <div className="flex items-center" data-no-drag>
       <button
         type="button"
         className={`${btnBase} bg-red-500`}
-        onClick={() => win.close()}
+        onClick={safeClose}
         aria-label="Close window"
       />
       <button
         type="button"
         className={`${btnBase} bg-yellow-400`}
-        onClick={() => win.minimize()}
+        onClick={safeMinimize}
         aria-label="Minimize window"
       />
       <button
         type="button"
         className={`${btnBase} bg-green-500`}
-        onClick={() =>
-          win.isMaximized().then((m: boolean) => (m ? win.unmaximize() : win.maximize()))
-        }
+        onClick={safeToggleMaximize}
         aria-label="Maximize window"
       />
     </div>

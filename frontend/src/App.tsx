@@ -9,17 +9,24 @@ import { memoIcon } from './lib/ui/memoIcon';
 const CircleNotch = memoIcon(CircleNotchIcon);
 
 // Lazy load the AppLayout component
-// This ensures it's only loaded when needed, improving initial load time
-const AppLayout = lazy(() => import('./AppLayout'));
+const AppLayout = lazy(() => {
+  return import('./AppLayout').catch((error) => {
+    console.error('Failed to load AppLayout:', error);
+    throw error; // Re-throw to let suspense handle it
+  });
+});
 
 function App() {
   // Install global keyboard shortcuts
-  useShortcutListener();
+  try {
+    useShortcutListener();
+  } catch (error) {
+    console.error('Failed to initialize shortcuts:', error);
+  }
 
   return (
     <ViewProvider>
       {/* Loading spinner while components are being fetched */}
-      {/* Let Suspense handle the loading state - no artificial delay needed */}
       <Suspense
         fallback={
           <div className="flex h-screen w-screen items-center justify-center">

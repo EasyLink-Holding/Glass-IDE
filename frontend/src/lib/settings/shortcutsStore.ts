@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PersistOptions } from 'zustand/middleware';
-import { type ActionId, DEFAULT_SHORTCUTS, type ShortcutMap } from '../shortcuts/shortcuts';
+import { type ActionId, DEFAULT_SHORTCUTS, type ShortcutMap } from '../shortcuts/bindings';
 import { createDebouncedJSONStorage } from '../zustand/debouncedStorage';
 
 // Shortcuts Store - manages keyboard shortcuts

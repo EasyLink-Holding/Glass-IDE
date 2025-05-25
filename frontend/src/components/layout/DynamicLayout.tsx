@@ -85,7 +85,12 @@ function DynamicLayout() {
     const template = templates.find((t) => t.id === templateId) ?? templates[0];
 
     // Incremental version to bust cache when slot map changes
-    const layoutVersion = `${space}-${templateId}-${Object.keys(currentPaneSlotMap).join(',')}-${Object.keys(hiddenPanes).join(',')}`;
+    const layoutVersion = [
+      space,
+      templateId,
+      JSON.stringify(currentPaneSlotMap),
+      JSON.stringify(hiddenPanes),
+    ].join('|');
 
     const slotToPane: Record<string, ReactElement | null> = {};
 

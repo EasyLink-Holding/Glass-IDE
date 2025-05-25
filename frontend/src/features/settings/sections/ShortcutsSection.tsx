@@ -5,8 +5,8 @@
 import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { FixedSizeList as List, type ListChildComponentProps } from 'react-window';
 import { useShortcutsStore } from '../../../lib/settings/shortcutsStore';
+import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS } from '../../../lib/shortcuts/bindings';
 import { formatShortcut } from '../../../lib/shortcuts/helpers';
-import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS } from '../../../lib/shortcuts/shortcuts';
 import { useShortcutRecorder } from '../../../lib/shortcuts/useShortcutRecorder';
 
 /**

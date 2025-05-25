@@ -19,6 +19,15 @@ export default function CustomizationSection() {
           description="Hide the macOS-style window control buttons in the top-left corner"
         />
       </div>
+
+      <div className="space-y-4 pt-4 border-t border-neutral-800">
+        <h3 className="font-medium">Navigation</h3>
+        <Toggle
+          settingKey="showNavBackground"
+          label="Show navigation backgrounds"
+          description="Display backgrounds for side and top navigation panes"
+        />
+      </div>
     </div>
   );
 }

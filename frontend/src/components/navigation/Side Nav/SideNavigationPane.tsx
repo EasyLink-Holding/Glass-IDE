@@ -15,6 +15,7 @@ import type { ComponentType } from 'react';
  */
 import { useWorkspace } from '../../../contexts/ViewContext';
 import type { SpaceId } from '../../../lib/layout/types';
+import { useSettings } from '../../../lib/settings/store';
 
 interface Item {
   id: SpaceId;
@@ -68,11 +69,12 @@ const panePrefetchers: Record<SpaceId, () => void> = {
 
 export default function SideNavigationPane() {
   const { space, setSpace, setView } = useWorkspace();
+  const showNavBackground = useSettings((s) => s.showNavBackground);
 
   return (
     <nav
       aria-label="Primary"
-      className="flex h-full w-16 shrink-0 flex-col items-center gap-3 rounded-lg border border-neutral-700 bg-neutral-800/60 py-3 px-2 backdrop-blur"
+      className={`flex h-full w-16 shrink-0 flex-col items-center gap-3 rounded-lg ${showNavBackground ? 'border border-neutral-700 bg-neutral-800/60 backdrop-blur' : ''} py-3 px-2`}
     >
       {items.map(({ id, icon: Icon, tip }) => (
         <button

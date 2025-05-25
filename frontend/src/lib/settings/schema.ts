@@ -9,6 +9,7 @@ import { DEFAULT_SHORTCUTS } from '../shortcuts/shortcuts';
 export interface Settings {
   // UI Settings
   hideSystemControls: boolean;
+  showNavBackground: boolean;
 
   // Layout Settings
   spaceTemplateMap: Record<SpaceId, string>; // Per-space template mapping
@@ -21,6 +22,7 @@ export interface Settings {
 
 export const defaultSettings: Settings = {
   hideSystemControls: false,
+  showNavBackground: false, // Default to no background for navigation panes
   spaceTemplateMap: { ...DEFAULT_SPACE_TEMPLATE_MAP },
   spacePaneSlotMaps: {
     home: { explorer: 'none', editor: 'main', console: 'none' },

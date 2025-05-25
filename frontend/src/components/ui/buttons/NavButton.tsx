@@ -61,7 +61,7 @@ export default function NavButton({
       onMouseEnter={onMouseEnter}
       data-testid={testId}
       data-no-drag
-      className="p-2 focus:outline-none focus:ring-2 focus:ring-neutral-500 text-neutral-200 bg-transparent"
+      className="p-2 focus:outline-none focus:ring-2 focus:ring-neutral-500 dark:text-neutral-200 text-neutral-800 bg-transparent"
     >
       <Icon size={size} weight={isActive ? 'fill' : 'regular'} />
     </button>

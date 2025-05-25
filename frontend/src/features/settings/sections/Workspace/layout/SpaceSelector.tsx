@@ -1,3 +1,4 @@
+import Select, { type SelectOption } from '../../../../../components/ui/buttons/Select';
 import type { SpaceId } from '../../../../../lib/layout/types';
 import { SPACES } from '../../../../../lib/layout/types';
 
@@ -13,18 +14,17 @@ export default function SpaceSelector({ currentSpace, onSpaceChange }: Props) {
   return (
     <div className="space-y-1">
       <span className="text-sm text-neutral-300">Configure layout for:</span>
-      <select
+      <Select
         value={currentSpace}
-        onChange={(e) => onSpaceChange(e.target.value as SpaceId)}
-        className="w-full max-w-xs rounded border border-neutral-600 bg-neutral-800 p-1 text-sm"
+        onChange={(v) => onSpaceChange(v as SpaceId)}
+        options={SPACES.map(
+          (s): SelectOption => ({
+            value: s,
+            label: `${s.charAt(0).toUpperCase()}${s.slice(1)} Space`,
+          })
+        )}
         aria-label="Select space to configure"
-      >
-        {SPACES.map((space: SpaceId) => (
-          <option key={space} value={space}>
-            {space.charAt(0).toUpperCase() + space.slice(1)} Space
-          </option>
-        ))}
-      </select>
+      />
     </div>
   );
 }

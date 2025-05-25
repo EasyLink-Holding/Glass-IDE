@@ -1,3 +1,4 @@
+import Select, { type SelectOption } from '../../../../../components/ui/buttons/Select';
 // Import templates data
 import { DEFAULT_EDITOR_TEMPLATE } from '../../../../../lib/layout/defaults';
 import { templates } from '../../../../../lib/layout/templates';
@@ -8,20 +9,15 @@ interface Props {
 }
 
 export default function TemplatePicker({ value, onChange }: Props) {
+  // build option list once
+  const options: SelectOption[] = templates.map(
+    (t): SelectOption => ({
+      value: t.id,
+      label: `${t.name}${t.id === DEFAULT_EDITOR_TEMPLATE ? ' (editor default)' : ''}${t.id === 'single' ? ' (basic default)' : ''}`,
+    })
+  );
+
   return (
-    <select
-      aria-label="Layout template"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-full max-w-xs rounded border border-neutral-600 bg-neutral-800 p-1 text-sm"
-    >
-      {templates.map((t) => (
-        <option key={t.id} value={t.id}>
-          {t.name}
-          {t.id === DEFAULT_EDITOR_TEMPLATE ? ' (editor default)' : ''}
-          {t.id === 'single' ? ' (basic default)' : ''}
-        </option>
-      ))}
-    </select>
+    <Select aria-label="Layout template" value={value} onChange={onChange} options={options} />
   );
 }

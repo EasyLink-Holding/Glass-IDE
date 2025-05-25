@@ -1,6 +1,6 @@
 import { MagnifyingGlass } from 'phosphor-react';
 import { useRef, useState } from 'react';
-import SearchDropdown from './SearchDropdown';
+import SearchDropdown from './SearchBox';
 
 /**
  * Pure-UI pill-style search bar shown in the top navigation.

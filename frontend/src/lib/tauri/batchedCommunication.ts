@@ -9,10 +9,8 @@
 // Using Tauri v2 API structure - import from correct modules
 import { core } from '@tauri-apps/api';
 import { emit, listen } from '@tauri-apps/api/event';
-
-// Extract invoke from core for convenience
-const { invoke } = core;
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import * as codec from './codec';
 
 // Batch window for collecting commands (milliseconds)
 const BATCH_WINDOW = 25;
@@ -228,6 +226,31 @@ export function stopCacheCleanup(): void {
 // Start the cache cleanup by default
 startCacheCleanup();
 
+// -----------------------------------------------------------------------------
+// Optional binary invoke path – enabled by default.
+// -----------------------------------------------------------------------------
+const USE_BINARY = true;
+
+async function invokeSmart<T>(command: string, args: Record<string, unknown>): Promise<T> {
+  if (!USE_BINARY) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return core.invoke<T>(command, args);
+  }
+
+  // Encode via MessagePack & send base64 – backend must decode.
+  const packed = codec.encode(args);
+  const base64 = btoa(String.fromCharCode(...packed));
+  const resultBase64 = await core.invoke<string>(command, { _bin: base64 } as Record<
+    string,
+    unknown
+  >);
+  // Decode back
+  const raw = atob(resultBase64)
+    .split('')
+    .map((c) => c.charCodeAt(0));
+  return codec.decode<T>(Uint8Array.from(raw));
+}
+
 /**
  * Batches multiple commands into a single invoke call
  * @param commands Array of command objects to batch
@@ -250,7 +273,7 @@ export async function batchCommands<T>(
     }
 
     // Execute and cache
-    const result = await invoke<T>(command, args);
+    const result = await invokeSmart<T>(command, args);
     responseCache.set(cacheKey, result);
     return [result];
   }
@@ -264,7 +287,7 @@ export async function batchCommands<T>(
   };
 
   // Execute the batch
-  const results = await invoke<T[]>('batch_commands', { batch });
+  const results = await invokeSmart<T[]>('batch_commands', { batch });
 
   // Cache individual results
   commands.forEach(({ command, args }, index) => {

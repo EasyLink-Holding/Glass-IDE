@@ -6,6 +6,7 @@ import { paneRegistry } from '../../lib/layout/paneRegistry';
 import { templates } from '../../lib/layout/templates';
 import type { LayoutNode, PaneId } from '../../lib/layout/types';
 import { useLayoutStore } from '../../lib/settings/layoutStore';
+import { useDeepMemo } from '../../lib/util/deepMemo';
 
 // Extracted as a separate function for clarity and potential future memoization
 function renderNode(
@@ -79,7 +80,7 @@ function DynamicLayout() {
   const currentPaneSlotMap = useLayoutStore((s) => s.spacePaneSlotMaps[space]);
   const hiddenPanes = useLayoutStore((s) => s.hiddenPanes, shallow);
 
-  const { template, slotToPane, layoutVersion } = useMemo(() => {
+  const { template, slotToPane, layoutVersion } = useDeepMemo(() => {
     // Get the template
     const template = templates.find((t) => t.id === templateId) ?? templates[0];
 

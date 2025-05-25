@@ -47,6 +47,14 @@ export const SPACES: SpaceId[] = [
   'organization',
 ];
 
+/**
+ * Runtime check to ensure a given string is a valid `SpaceId`.
+ * Useful when receiving arbitrary input (e.g. from DOM events).
+ */
+export function isSpaceId(value: string): value is SpaceId {
+  return (SPACES as readonly string[]).includes(value);
+}
+
 export const VALID_VIEWS: MainView[] = [...SPACES, 'settings'];
 
 export type TemplateId = string;

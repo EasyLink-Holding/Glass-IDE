@@ -37,7 +37,10 @@ jobs:
 
       - name: Determine version
         id: vars
-        run: echo "version=$(node -p 'require(\"./package.json\").version')" >> $GITHUB_OUTPUT
+        run: |
+          VERSION=$(node -p 'require("./package.json").version')
+          echo "VERSION=$VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Commit version bump
         env:
@@ -51,12 +54,18 @@ jobs:
           git tag "v$VERSION"
           git push --follow-tags
 
+      # Build the Tauri app and create a GitHub release with artifacts
       - name: Build and upload mac app
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Use the same token type for consistent permissions
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
         with:
+          # Use the version from the previous step
           tagName: v${{ steps.vars.outputs.version }}
           releaseName: "Glass IDE v${{ steps.vars.outputs.version }}"
-          releaseBody: "Automatic release from GitHub Actions workflow"
+          releaseBody: |
+            Automatic release from GitHub Actions workflow
+            Version: ${{ steps.vars.outputs.version }}
+            Released: $(date +'%Y-%m-%d')
           releaseDraft: false

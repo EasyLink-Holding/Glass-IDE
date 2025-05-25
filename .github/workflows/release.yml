@@ -54,7 +54,9 @@ jobs:
       - name: Build and upload mac app
         uses: tauri-apps/tauri-action@v0
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: "v${{ steps.vars.outputs.version }}"
+          tagName: v${{ steps.vars.outputs.version }}
+          releaseName: "Glass IDE v${{ steps.vars.outputs.version }}"
+          releaseBody: "Automatic release from GitHub Actions workflow"
           releaseDraft: false

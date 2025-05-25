@@ -11,7 +11,8 @@ fn main() {
         // Expose dynamic batch command handler
         .invoke_handler(tauri::generate_handler![
             commands::batch_commands,
-            commands::fs::read_dir_snapshot
+            commands::fs::read_dir_snapshot,
+            commands::fs::start_fs_watch,
         ])
         .setup(|app| {
             #[cfg_attr(

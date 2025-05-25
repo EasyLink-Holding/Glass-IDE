@@ -56,3 +56,4 @@ pub async fn batch_commands<R: Runtime>(
 }
 
 pub mod fs;
+pub use fs::{read_dir_children, start_fs_watch};

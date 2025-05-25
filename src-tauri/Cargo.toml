@@ -28,6 +28,10 @@ tauri = { version = "2.5.0", features = ["macos-private-api"] }
 tauri-plugin-log = "2.0.0-rc"
 window-vibrancy = "0.6.0"
 walkdir = "2.4"
+notify = "6.1"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+dirs-next = "2.0"
+once_cell = "1.19"
 
 [profile.release]
 lto = "thin"

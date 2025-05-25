@@ -10,6 +10,7 @@
 import { core } from '@tauri-apps/api';
 import { emit, listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { runTask } from '../../workers/pool/workerPool';
 import * as codec from './codecWorkerClient';
 
 // Batch window for collecting commands (milliseconds)
@@ -111,78 +112,26 @@ const responseCache = new LRUCache();
  * @param obj The object to stringify
  * @returns A deterministic JSON string
  */
-function deterministicStringify(obj: Record<string, unknown>): string {
-  // Set to track objects we've already processed (for circular reference detection)
-  const visited = new WeakSet();
-
-  // Helper function to recursively sort keys of nested objects
-  function sortObjectKeys(input: unknown, depth = 0): unknown {
-    // Prevent stack overflow with deep objects - limit to 100 levels
-    if (depth > 100) {
-      return '[MAX_DEPTH_EXCEEDED]';
-    }
-
-    // Handle primitives and null
-    if (input === null) return null;
-
-    // Handle non-objects
-    if (typeof input !== 'object') {
-      // Handle non-serializable types
-      if (typeof input === 'function') return '[Function]';
-      if (typeof input === 'symbol') return '[Symbol]';
-      if (typeof input === 'undefined') return null; // Convert undefined to null for JSON compatibility
-      if (Number.isNaN(input)) return null; // Convert NaN to null
-      if (input === Number.POSITIVE_INFINITY || input === Number.NEGATIVE_INFINITY) return null; // Convert Infinity to null
-
-      return input; // Return primitive values as-is
-    }
-
-    // Handle circular references
-    if (visited.has(input)) {
-      return '[Circular]';
-    }
-
-    // Add to visited set to detect circular references
-    visited.add(input);
-
-    // Handle arrays - recursively sort the contents
-    if (Array.isArray(input)) {
-      return input.map((item) => sortObjectKeys(item, depth + 1));
-    }
-
-    // Handle Date objects
-    if (input instanceof Date) {
-      return input.toISOString();
-    }
-
-    // Handle other special object types
-    if (input instanceof RegExp) return input.toString();
-    if (input instanceof Error) return `[Error: ${input.message}]`;
-    if (input instanceof Map || input instanceof Set) {
-      return `[${input.constructor.name}]`;
-    }
-
-    // For regular objects - create new object with sorted keys
-    const sortedKeys = Object.keys(input).sort();
-    const result: Record<string, unknown> = {};
-
-    for (const key of sortedKeys) {
-      // Recursively sort nested objects
-      result[key] = sortObjectKeys((input as Record<string, unknown>)[key], depth + 1);
-    }
-
-    return result;
-  }
-
-  // Try-catch block to handle any unexpected serialization issues
+async function deterministicStringify(obj: Record<string, unknown>): Promise<string> {
   try {
-    // Sort the object keys and then stringify
-    const sortedObj = sortObjectKeys(obj);
-    return JSON.stringify(sortedObj);
-  } catch (error) {
-    console.warn('deterministicStringify: Failed to stringify object', error);
-    // Fallback to a safe representation
-    return JSON.stringify({ error: 'Unstringifiable object' });
+    return await runTask<string>('deterministicStringify', obj);
+  } catch {
+    // Fallback to inline implementation if workers unavailable
+    const visited = new WeakSet();
+    function sortKeys(input: unknown, depth = 0): unknown {
+      if (depth > 100) return '[MAX_DEPTH]';
+      if (input === null) return null;
+      if (typeof input !== 'object') return input;
+      if (visited.has(input)) return '[Circular]';
+      visited.add(input as object);
+      if (Array.isArray(input)) return input.map((i) => sortKeys(i, depth + 1));
+      const sorted: Record<string, unknown> = {};
+      for (const k of Object.keys(input as object).sort()) {
+        sorted[k] = sortKeys((input as Record<string, unknown>)[k], depth + 1);
+      }
+      return sorted;
+    }
+    return JSON.stringify(sortKeys(obj));
   }
 }
 
@@ -264,7 +213,7 @@ export async function batchCommands<T>(
     const { command, args } = commands[0];
 
     // Check cache first - use deterministic serialization
-    const cacheKey = `${command}:${deterministicStringify(args)}`;
+    const cacheKey = `${command}:${await deterministicStringify(args)}`;
     const cacheEntry = responseCache.getEntry<T>(cacheKey);
     const now = Date.now();
 
@@ -289,12 +238,12 @@ export async function batchCommands<T>(
   // Execute the batch
   const results = await invokeSmart<T[]>('batch_commands', { batch });
 
-  // Cache individual results
-  commands.forEach(({ command, args }, index) => {
-    // Use deterministicStringify for consistent cache keys between batched and single commands
-    const cacheKey = `${command}:${deterministicStringify(args)}`;
-    responseCache.set(cacheKey, results[index]);
-  });
+  // Cache individual results (need sequential await)
+  for (let i = 0; i < commands.length; i += 1) {
+    const { command, args } = commands[i];
+    const cacheKey = `${command}:${await deterministicStringify(args)}`;
+    responseCache.set(cacheKey, results[i]);
+  }
 
   return results;
 }

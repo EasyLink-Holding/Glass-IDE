@@ -18,7 +18,7 @@ pub fn build_menu<R: Runtime>(app: &AppHandle<R>) -> TauriResult<Menu<R>> {
 
 /// Attach the menu to the application and wire menu events.
 pub fn attach<R: Runtime>(app: &App<R>) -> TauriResult<()> {
-    let menu = build_menu(&app.handle())?;
+    let menu = build_menu(app.handle())?;
     app.set_menu(menu)?;
 
     app.on_menu_event(|app_handle, event| handle_event(app_handle, event));
@@ -27,12 +27,9 @@ pub fn attach<R: Runtime>(app: &App<R>) -> TauriResult<()> {
 
 /// Centralised router for menu events.
 pub fn handle_event<R: Runtime>(app_handle: &AppHandle<R>, event: MenuEvent) {
-    match event.id().0.as_str() {
-        "reset_layout" => {
-            if let Err(err) = app_handle.emit("reset-layout", ()) {
-                eprintln!("Failed to emit reset-layout: {err}");
-            }
+    if event.id().0.as_str() == "reset_layout" {
+        if let Err(err) = app_handle.emit("reset-layout", ()) {
+            eprintln!("Failed to emit reset-layout: {err}");
         }
-        _ => {}
     }
 }

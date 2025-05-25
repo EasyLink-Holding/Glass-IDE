@@ -25,18 +25,18 @@ export const defaultSettings: Settings = {
   showNavBackground: false, // Default to no background for navigation panes
   spaceTemplateMap: { ...DEFAULT_SPACE_TEMPLATE_MAP },
   spacePaneSlotMaps: {
-    home: { explorer: 'none', editor: 'main', console: 'none' },
-    editor: { explorer: 'left', editor: 'main', console: 'right' },
-    versionControl: { explorer: 'none', editor: 'main', console: 'none' },
-    database: { explorer: 'none', editor: 'main', console: 'none' },
-    docs: { explorer: 'none', editor: 'main', console: 'none' },
-    deployment: { explorer: 'none', editor: 'main', console: 'none' },
-    marketplace: { explorer: 'none', editor: 'main', console: 'none' },
-    teams: { explorer: 'none', editor: 'main', console: 'none' },
-    organization: { explorer: 'none', editor: 'main', console: 'none' },
+    home: { explorer: 'none', main: 'main', chat: 'none' },
+    editor: { explorer: 'left', main: 'main', chat: 'right' },
+    versionControl: { explorer: 'none', main: 'main', chat: 'none' },
+    database: { explorer: 'none', main: 'main', chat: 'none' },
+    docs: { explorer: 'none', main: 'main', chat: 'none' },
+    deployment: { explorer: 'none', main: 'main', chat: 'none' },
+    marketplace: { explorer: 'none', main: 'main', chat: 'none' },
+    teams: { explorer: 'none', main: 'main', chat: 'none' },
+    organization: { explorer: 'none', main: 'main', chat: 'none' },
   },
   shortcuts: { ...DEFAULT_SHORTCUTS },
-  hiddenPanes: { explorer: false, editor: false, console: false },
+  hiddenPanes: { explorer: false, main: false, chat: false },
   // add future settings here after this line
 } as Settings;
 

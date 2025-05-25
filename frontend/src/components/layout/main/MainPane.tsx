@@ -24,6 +24,7 @@ export default function MainPane() {
       content = <SettingsPane />;
       break;
     case 'editor':
+      // keep retro compatibility: editor main view still shows EditorPane
       content = <EditorPane />;
       break;
     case 'versionControl':

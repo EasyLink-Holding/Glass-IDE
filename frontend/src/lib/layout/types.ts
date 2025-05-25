@@ -20,7 +20,7 @@ export interface LayoutTemplate {
   root: LayoutNode;
 }
 
-export type PaneId = 'explorer' | 'editor' | 'console'; // extend later
+export type PaneId = 'explorer' | 'main' | 'chat'; // extend later
 
 export type SpaceId =
   | 'home'
@@ -80,12 +80,12 @@ export const DEFAULT_SPACE_TEMPLATE_MAP: ViewTemplateMap = {
 
 export const DEFAULT_EDITOR_PANE_SLOT_MAP: PaneSlotMap = {
   explorer: 'left',
-  editor: 'main',
-  console: 'right',
+  main: 'main',
+  chat: 'right',
 };
 
 export const DEFAULT_BASIC_PANE_SLOT_MAP: PaneSlotMap = {
   explorer: 'none',
-  editor: 'main',
-  console: 'none',
+  main: 'main',
+  chat: 'none',
 };

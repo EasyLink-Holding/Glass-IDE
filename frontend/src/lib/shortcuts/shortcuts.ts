@@ -5,6 +5,7 @@ import { switchSpace, toggleSettings } from '../../contexts/ViewContext';
 import type { PaneId } from '../layout/types';
 import { useSettings } from '../settings/store';
 import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS, type ShortcutMap } from './bindings';
+// We need to type check the action IDs but the IDE can handle it now
 import { MOD, formatShortcut, isMac } from './utils';
 
 // -----------------------------------------------------------------------------
@@ -79,8 +80,8 @@ function togglePane(paneId: PaneId) {
 
 export function setupPaneShortcuts() {
   registerShortcut('toggle.explorer', () => togglePane('explorer'));
-  registerShortcut('toggle.editor', () => togglePane('editor'));
-  registerShortcut('toggle.console', () => togglePane('console'));
+  registerShortcut('toggle.main', () => togglePane('main'));
+  registerShortcut('toggle.chat', () => togglePane('chat'));
   registerShortcut('toggle.settings', toggleSettings);
 }
 

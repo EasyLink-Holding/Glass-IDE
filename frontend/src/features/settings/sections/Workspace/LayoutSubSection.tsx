@@ -40,8 +40,8 @@ export default function LayoutSubSection() {
   const currentPaneMap =
     localPaneSlotMaps[currentSpace] ||
     (currentSpace === 'editor'
-      ? { explorer: 'left', editor: 'main', console: 'right' }
-      : { explorer: 'none', editor: 'main', console: 'none' });
+      ? { explorer: 'left', main: 'main', chat: 'right' }
+      : { explorer: 'none', main: 'main', chat: 'none' });
 
   // Track whether settings have been modified
   const dirty =

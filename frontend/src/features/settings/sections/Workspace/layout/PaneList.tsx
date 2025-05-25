@@ -1,6 +1,13 @@
 import type { PaneId } from '../../../../../lib/layout/types';
 
-const panes: PaneId[] = ['explorer', 'editor', 'console'];
+const panes: PaneId[] = ['explorer', 'main', 'chat'];
+
+// Display labels for the panes
+const paneLabels: Record<PaneId, string> = {
+  explorer: 'Explorer',
+  main: 'Main',
+  chat: 'Chat',
+};
 
 interface Props {
   selected: PaneId | null;
@@ -19,7 +26,7 @@ export default function PaneList({ selected, onSelect }: Props) {
               p === selected ? 'bg-neutral-700 text-white' : 'hover:bg-neutral-800 text-neutral-300'
             }`}
           >
-            {p}
+            {paneLabels[p]}
           </button>
         </li>
       ))}

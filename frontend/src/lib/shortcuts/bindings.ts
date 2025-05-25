@@ -2,8 +2,8 @@ import { MOD } from './utils';
 
 export const SHORTCUT_DEFS = [
   { id: 'toggle.explorer', label: 'Toggle Explorer Pane', default: `${MOD}+e` },
-  { id: 'toggle.editor', label: 'Toggle Editor Pane', default: `${MOD}+m` },
-  { id: 'toggle.console', label: 'Toggle Console Pane', default: `${MOD}+l` },
+  { id: 'toggle.main', label: 'Toggle Main Pane', default: `${MOD}+m` },
+  { id: 'toggle.chat', label: 'Toggle Chat Pane', default: `${MOD}+l` },
   { id: 'toggle.settings', label: 'Toggle Settings', default: `${MOD}+,` },
   { id: 'go.home', label: 'Go to Home', default: `${MOD}+1` },
   { id: 'go.editor', label: 'Go to Editor', default: `${MOD}+2` },

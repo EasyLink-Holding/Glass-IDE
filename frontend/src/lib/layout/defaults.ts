@@ -25,13 +25,13 @@ export const DEFAULT_TEMPLATE = DEFAULT_EDITOR_TEMPLATE;
 // Default slot mapping for the editor space
 export const DEFAULT_PANE_SLOT_MAP: Record<PaneId, string> = {
   explorer: 'left',
-  editor: 'main',
-  console: 'right',
+  main: 'main',
+  chat: 'right',
 };
 
 // Default slot mapping for basic spaces
 export const DEFAULT_BASIC_PANE_SLOT_MAP: Record<PaneId, string> = {
   explorer: 'none', // Not displayed in basic layout
-  editor: 'main', // Main content area
-  console: 'none', // Not displayed in basic layout
+  main: 'main', // Main content area
+  chat: 'none', // Not displayed in basic layout
 };

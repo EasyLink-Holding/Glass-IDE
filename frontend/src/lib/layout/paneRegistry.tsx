@@ -13,8 +13,8 @@ import MainPane from '../../components/layout/main/MainPane';
  */
 export const paneRegistry: Record<PaneId, ComponentType> = {
   explorer: ExplorerPane,
-  editor: MainPane,
-  console: ChatPane,
+  main: MainPane,
+  chat: ChatPane,
 };
 
 /**

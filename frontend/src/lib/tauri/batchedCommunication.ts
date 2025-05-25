@@ -10,7 +10,7 @@
 import { core } from '@tauri-apps/api';
 import { emit, listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import * as codec from './codec';
+import * as codec from './codecWorkerClient';
 
 // Batch window for collecting commands (milliseconds)
 const BATCH_WINDOW = 25;
@@ -238,7 +238,7 @@ async function invokeSmart<T>(command: string, args: Record<string, unknown>): P
   }
 
   // Encode via MessagePack & send base64 – backend must decode.
-  const packed = codec.encode(args);
+  const packed = await codec.encode(args);
   const base64 = btoa(String.fromCharCode(...packed));
   const resultBase64 = await core.invoke<string>(command, { _bin: base64 } as Record<
     string,
@@ -248,7 +248,7 @@ async function invokeSmart<T>(command: string, args: Record<string, unknown>): P
   const raw = atob(resultBase64)
     .split('')
     .map((c) => c.charCodeAt(0));
-  return codec.decode<T>(Uint8Array.from(raw));
+  return await codec.decode<T>(Uint8Array.from(raw));
 }
 
 /**

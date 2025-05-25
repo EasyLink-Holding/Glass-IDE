@@ -1,21 +1,20 @@
-import type { ReactElement } from 'react';
+import type { ComponentType } from 'react';
 import type { PaneId } from './types';
 
 // Individual pane implementations
-import ChatPane from '../../components/layout/chat/ChatPane';
-import ExplorerPane from '../../components/layout/explorer/ExplorerPane';
+import ChatPane from '../../app/editor/ChatPane';
+import ExplorerPane from '../../app/editor/ExplorerPane';
 import MainPane from '../../components/layout/main/MainPane';
 
 /**
- * Central pane registry – single source of truth.
- *
- * Add new panes here and they will automatically appear everywhere
- * (DynamicLayout, Template visualisers, etc.).
+ * Central pane registry – maps pane IDs to component types.
+ * Each DynamicLayout render will instantiate fresh elements, ensuring
+ * context/state updates propagate correctly.
  */
-export const paneRegistry: Record<PaneId, ReactElement> = {
-  explorer: <ExplorerPane />,
-  editor: <MainPane />,
-  console: <ChatPane />,
+export const paneRegistry: Record<PaneId, ComponentType> = {
+  explorer: ExplorerPane,
+  editor: MainPane,
+  console: ChatPane,
 };
 
 /**
@@ -23,7 +22,7 @@ export const paneRegistry: Record<PaneId, ReactElement> = {
  * Note: Registration occurs at runtime, therefore should be called
  * before first render.
  */
-export function registerPane(id: PaneId, element: ReactElement) {
+export function registerPane(id: PaneId, element: ComponentType) {
   // eslint-disable-next-line no-param-reassign
-  (paneRegistry as Record<string, ReactElement>)[id] = element;
+  (paneRegistry as Record<string, ComponentType>)[id] = element;
 }

@@ -2,6 +2,14 @@ import type { LayoutTemplate } from './types';
 
 export const templates: LayoutTemplate[] = [
   {
+    id: 'single',
+    name: 'Single Pane',
+    root: {
+      type: 'slot',
+      id: 'main',
+    },
+  },
+  {
     id: 'stacked',
     name: 'Stacked',
     root: {

@@ -1,39 +1,89 @@
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 
-// Possible views inside the MainPane (extend as needed)
-export type MainView = 'welcome' | 'editor' | 'settings';
+import type { MainView, SpaceId } from '../lib/layout/types';
+import { SPACES, VALID_VIEWS } from '../lib/layout/types';
 
-interface ViewCtx {
+interface WorkspaceCtx {
+  space: SpaceId;
   view: MainView;
+  setSpace: Dispatch<SetStateAction<SpaceId>>;
   setView: Dispatch<SetStateAction<MainView>>;
+  toggleSettings: () => void;
 }
 
-const Ctx = createContext<ViewCtx | null>(null);
+const Ctx = createContext<WorkspaceCtx | null>(null);
 
-// Externally accessible setter (used by shortcuts)
-let externalSetView: Dispatch<SetStateAction<MainView>> | null = null;
+// Externally accessible helper for toggling settings
+let externalToggleSettings: (() => void) | null = null;
 
-export function toggleSettingsView() {
-  externalSetView?.((prev) => (prev === 'settings' ? 'welcome' : 'settings'));
+export function toggleSettings() {
+  externalToggleSettings?.();
 }
 
-export function ViewProvider({ children }: { children: ReactNode }) {
-  const [view, setView] = useState<MainView>('welcome');
+export function WorkspaceProvider({ children }: { children: ReactNode }) {
+  const [space, setSpace] = useState<SpaceId>('home');
+  const [view, setView] = useState<MainView>('home');
 
-  // expose setter for non-component contexts (e.g. shortcuts)
+  // Remember previous non-settings view for toggle
+  const prevViewRef = useRef<MainView>('home');
+
+  // Bind externals once
   useEffect(() => {
-    externalSetView = setView;
+    externalToggleSettings = () => {
+      setView((current) => {
+        if (current === 'settings') {
+          // Restore previous view
+          return prevViewRef.current;
+        }
+        // Store current view before entering settings
+        prevViewRef.current = current;
+        return 'settings';
+      });
+    };
     return () => {
-      externalSetView = null;
+      externalToggleSettings = null;
     };
   }, []);
 
-  return <Ctx.Provider value={{ view, setView }}>{children}</Ctx.Provider>;
+  // URL hash → #space=view  (simple impl, no parsing safety)
+  useEffect(() => {
+    const hash = window.location.hash.replace('#', '');
+    if (!hash) return;
+    const [hashSpace, hashView] = hash.split('=');
+    if (SPACES.includes(hashSpace as SpaceId)) {
+      setSpace(hashSpace as SpaceId);
+    }
+    if (VALID_VIEWS.includes((hashView ?? hashSpace) as MainView)) {
+      setView((hashView ?? hashSpace) as MainView);
+    }
+  }, []);
+
+  // Keep hash updated
+  useEffect(() => {
+    window.history.replaceState(null, '', `#${space}=${view}`);
+  }, [space, view]);
+
+  const ctxValue: WorkspaceCtx = {
+    space,
+    view,
+    setSpace,
+    setView,
+    toggleSettings: () => externalToggleSettings?.(),
+  };
+
+  return <Ctx.Provider value={ctxValue}>{children}</Ctx.Provider>;
+}
+
+export function useWorkspace() {
+  const ctx = useContext(Ctx);
+  if (!ctx) throw new Error('useWorkspace must be inside <WorkspaceProvider>');
+  return ctx;
 }
 
 export function useView() {
-  const ctx = useContext(Ctx);
-  if (!ctx) throw new Error('useView must be inside <ViewProvider>');
-  return ctx;
+  return useWorkspace().view;
 }
+
+export const ViewProvider = WorkspaceProvider;
+export const toggleSettingsView = toggleSettings;

@@ -1,9 +1,9 @@
 import { Suspense, useMemo, useState } from 'react';
-import SettingsNav from './navigation/SettingsNav';
-import CustomizationSection from './sections/Customization/CustomizationSection';
-import GeneralSection from './sections/General/GeneralSection';
-import ShortcutsSection from './sections/ShortcutsSection';
-import WorkspaceSection from './sections/Workspace/WorkspaceSection';
+import SettingsNav from '../../features/settings/navigation/SettingsNav';
+import CustomizationSection from '../../features/settings/sections/Customization/CustomizationSection';
+import GeneralSection from '../../features/settings/sections/General/GeneralSection';
+import ShortcutsSection from '../../features/settings/sections/ShortcutsSection';
+import WorkspaceSection from '../../features/settings/sections/Workspace/WorkspaceSection';
 
 const sectionMap = {
   general: GeneralSection,

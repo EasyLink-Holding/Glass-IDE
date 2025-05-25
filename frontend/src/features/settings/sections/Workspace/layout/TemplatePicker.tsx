@@ -1,4 +1,5 @@
-import { DEFAULT_TEMPLATE } from '../../../../../lib/layout/defaults';
+// Import templates data
+import { DEFAULT_EDITOR_TEMPLATE } from '../../../../../lib/layout/defaults';
 import { templates } from '../../../../../lib/layout/templates';
 
 interface Props {
@@ -17,7 +18,8 @@ export default function TemplatePicker({ value, onChange }: Props) {
       {templates.map((t) => (
         <option key={t.id} value={t.id}>
           {t.name}
-          {t.id === DEFAULT_TEMPLATE ? ' (default)' : ''}
+          {t.id === DEFAULT_EDITOR_TEMPLATE ? ' (editor default)' : ''}
+          {t.id === 'single' ? ' (basic default)' : ''}
         </option>
       ))}
     </select>

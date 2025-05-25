@@ -24,7 +24,7 @@ Cargo.lock
 .windsurf
 
 # Documentation
-docs/
+/docs/
 
 # Tauri
 src-tauri/.cargo/

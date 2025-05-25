@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
+import { useWorkspace } from '../../contexts/ViewContext';
 import { paneRegistry } from '../../lib/layout/paneRegistry';
 import { templates } from '../../lib/layout/templates';
 import type { LayoutNode, PaneId } from '../../lib/layout/types';
@@ -36,20 +37,41 @@ function renderNode(
 }
 
 export default function DynamicLayout() {
-  const activeTemplateId = useSettings((s) => s.activeTemplateId);
-  const paneSlotMap = useSettings((s) => s.paneSlotMap);
+  // Get current view and space to determine which template to use
+  const { space } = useWorkspace(); // view not needed for layout
+
+  // Access template and slot settings
+  const spaceTemplateMap = useSettings((s) => s.spaceTemplateMap);
+  const spacePaneSlotMaps = useSettings((s) => s.spacePaneSlotMaps);
   const hiddenPanes = useSettings((s) => s.hiddenPanes);
 
   const { template, slotToPane } = useMemo(() => {
-    const template = templates.find((t) => t.id === activeTemplateId) ?? templates[0];
+    // Get the template ID for the current space
+    const templateId = spaceTemplateMap[space];
+
+    // Get the template
+    const template = templates.find((t) => t.id === templateId) ?? templates[0];
+
+    // Get the pane slot mapping for the current space
+    const currentPaneSlotMap = spacePaneSlotMaps[space];
+
     const slotToPane: Record<string, ReactElement | null> = {};
-    for (const [paneId, slotId] of Object.entries(paneSlotMap)) {
-      if (hiddenPanes[paneId as PaneId]) continue; // skip hidden
-      const element = paneRegistry[paneId as PaneId];
-      if (element) slotToPane[slotId] = element;
+
+    // Process each pane mapping, skipping 'none' slots and hidden panes
+    for (const [paneId, slotId] of Object.entries(currentPaneSlotMap)) {
+      // Skip if slot is 'none' (means don't display this pane in this space)
+      if (slotId === 'none') continue;
+
+      // Skip if pane is marked as hidden in settings
+      if (hiddenPanes[paneId as PaneId]) continue;
+
+      // Get the React component for this pane
+      const Comp = paneRegistry[paneId as PaneId];
+      if (Comp) slotToPane[slotId] = <Comp />;
     }
+
     return { template, slotToPane };
-  }, [activeTemplateId, paneSlotMap, hiddenPanes]);
+  }, [space, spaceTemplateMap, spacePaneSlotMaps, hiddenPanes]);
 
   return <div className="flex h-full w-full">{renderNode(template.root, slotToPane)}</div>;
 }

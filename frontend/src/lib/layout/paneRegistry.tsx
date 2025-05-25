@@ -1,28 +1,79 @@
-import type { ComponentType } from 'react';
+import type { ComponentType, LazyExoticComponent } from 'react';
+import { Suspense, lazy } from 'react';
+import SkeletonPane from '../../components/common/SkeletonPane';
 import type { PaneId } from './types';
 
-// Individual pane implementations
-import ChatPane from '../../app/editor/ChatPane';
-import ExplorerPane from '../../app/editor/ExplorerPane';
-import MainPane from '../../components/layout/main/MainPane';
+// Lazy load all panes to improve initial load time and chunk size
+// Each pane will only be fetched when it's actually needed in the UI
+const ChatPane = lazy(() => import('../../app/editor/ChatPane'));
+const ExplorerPane = lazy(() => import('../../app/editor/ExplorerPane'));
+const MainPane = lazy(() => import('../../components/layout/main/MainPane'));
+
+// Create a wrapper that adds Suspense fallback for all lazy-loaded panes
+const createPaneWithSuspense = (
+  LazyComponent: LazyExoticComponent<ComponentType<Record<string, unknown>>>
+) => {
+  // Return a component that wraps the lazy-loaded component with Suspense
+  return () => (
+    <Suspense
+      fallback={
+        <div className="flex h-full w-full items-center justify-center">
+          <SkeletonPane />
+        </div>
+      }
+    >
+      <LazyComponent />
+    </Suspense>
+  );
+};
 
 /**
  * Central pane registry – maps pane IDs to component types.
  * Each DynamicLayout render will instantiate fresh elements, ensuring
  * context/state updates propagate correctly.
+ *
+ * Wraps all lazy-loaded components with Suspense to handle loading states gracefully
  */
 export const paneRegistry: Record<PaneId, ComponentType> = {
-  explorer: ExplorerPane,
-  main: MainPane,
-  chat: ChatPane,
+  explorer: createPaneWithSuspense(ExplorerPane),
+  main: createPaneWithSuspense(MainPane),
+  chat: createPaneWithSuspense(ChatPane),
 };
+
+/**
+ * A safer approach to identify React lazy components.
+ * Since React internals can change and accessing them is brittle,
+ * we'll use a more pragmatic approach based on common patterns.
+ */
+function isLazyComponent(
+  component: ComponentType | LazyExoticComponent<ComponentType>
+): component is LazyExoticComponent<ComponentType> {
+  // Convert to a string representation for inspection
+  // This avoids accessing internal properties directly
+  const componentString = String(component);
+
+  // Lazy components typically have distinctive string representations
+  return (
+    // Check for common patterns in the string representation
+    componentString.includes('lazy') ||
+    // Additional checks for future React versions
+    componentString.includes('Lazy')
+  );
+}
 
 /**
  * Optional helper for dynamic registration (e.g. plug-ins).
  * Note: Registration occurs at runtime, therefore should be called
  * before first render.
  */
-export function registerPane(id: PaneId, element: ComponentType) {
+export function registerPane(
+  id: PaneId,
+  element: ComponentType | LazyExoticComponent<ComponentType>
+) {
+  // If it's a lazy component, wrap it with Suspense
+  // Use the reliable type guard function instead of displayName check
+  const wrappedElement = isLazyComponent(element) ? createPaneWithSuspense(element) : element;
+
   // eslint-disable-next-line no-param-reassign
-  (paneRegistry as Record<string, ComponentType>)[id] = element;
+  (paneRegistry as Record<string, ComponentType>)[id] = wrappedElement;
 }

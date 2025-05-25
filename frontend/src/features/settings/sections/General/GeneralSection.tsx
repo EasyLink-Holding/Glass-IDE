@@ -1,15 +1,95 @@
-import { useState } from 'react';
-import { useSettings } from '../../../../lib/settings/store';
+import { memo, useState } from 'react';
+import { useAppearanceStore } from '../../../../lib/settings/appearanceStore';
+import { useFeatureStore } from '../../../../lib/settings/featureStore';
+import { useLayoutStore } from '../../../../lib/settings/layoutStore';
+import { useShortcutsStore } from '../../../../lib/settings/shortcutsStore';
 
-export default function GeneralSection() {
-  const resetAllData = useSettings((s) => s.resetAllData);
+/**
+ * General settings section component
+ * Provides global app settings and data management options
+ */
+function GeneralSection() {
+  // We'll reset all stores individually since we've split the monolithic store
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [resetComplete, setResetComplete] = useState(false);
 
+  // Get reset actions from store hooks for proper state updates and re-renders
+  const resetLayout = useLayoutStore((state) => state.resetLayout);
+  const resetAppearance = useAppearanceStore((state) => state.resetAppearance);
+  const resetFeatures = useFeatureStore((state) => state.resetFeatures);
+  const resetShortcuts = useShortcutsStore((state) => state.resetShortcuts);
+
+  /**
+   * Reset all data across all specialized stores with proper error handling
+   */
   function handleReset() {
-    resetAllData();
+    // Track success/failure for user feedback
+    let hasErrors = false;
+
+    // Reset each store individually with try/catch for each operation
+    try {
+      resetLayout();
+    } catch (err) {
+      hasErrors = true;
+      // Only log in development - this uses feature detection
+      // to determine if we're in dev mode (presence of debug tools)
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        console.warn('Failed to reset layout settings:', err);
+      }
+    }
+
+    try {
+      resetAppearance();
+    } catch (err) {
+      hasErrors = true;
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        console.warn('Failed to reset appearance settings:', err);
+      }
+    }
+
+    try {
+      resetFeatures();
+    } catch (err) {
+      hasErrors = true;
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        console.warn('Failed to reset feature settings:', err);
+      }
+    }
+
+    try {
+      resetShortcuts();
+    } catch (err) {
+      hasErrors = true;
+      if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+        console.warn('Failed to reset shortcuts:', err);
+      }
+    }
+
+    // Clear any other persisted data if needed
+    if (typeof window !== 'undefined') {
+      try {
+        // Clear any additional persisted storage that might not be covered by store resets
+        localStorage.removeItem('glass-ide-settings'); // Old legacy storage
+      } catch (err) {
+        hasErrors = true;
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+          console.warn('Failed to clear local storage:', err);
+        }
+      }
+    }
+
+    // Update UI state
     setShowConfirmation(false);
     setResetComplete(true);
+
+    // Log result only in development
+    if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+      if (hasErrors) {
+        console.warn('Reset completed with some errors');
+      } else {
+        console.info('All application data has been reset successfully');
+      }
+    }
 
     // Hide success message after 3 seconds
     setTimeout(() => {
@@ -68,3 +148,6 @@ export default function GeneralSection() {
     </div>
   );
 }
+
+// Export memoized component for better performance
+export default memo(GeneralSection);

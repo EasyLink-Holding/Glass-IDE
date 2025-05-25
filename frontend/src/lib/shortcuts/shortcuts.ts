@@ -3,7 +3,8 @@ import hotkeys from 'hotkeys-js';
 import { useEffect, useRef } from 'react';
 import { switchSpace, toggleSettings } from '../../contexts/ViewContext';
 import type { PaneId } from '../layout/types';
-import { useSettings } from '../settings/store';
+// Import shortcut settings from our new specialized store
+import { useLayoutStore } from '../settings/layoutStore';
 import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS, type ShortcutMap } from './bindings';
 // We need to type check the action IDs but the IDE can handle it now
 import { MOD, formatShortcut, isMac } from './utils';
@@ -26,7 +27,8 @@ export function registerShortcut(actionId: ActionId, handler: () => void) {
  * Place once near the root (e.g. in App component).
  */
 export function useShortcutListener() {
-  const shortcuts = useSettings((s) => s.shortcuts);
+  // Use shortcuts from the layout store
+  const shortcuts = useLayoutStore((state) => state.shortcuts);
 
   // Track key combinations bound by this hook instance so we can unbind them
   // precisely during re-binds and when the component unmounts.
@@ -73,9 +75,9 @@ export function useShortcutListener() {
 // -----------------------------------------------------------------------------
 
 function togglePane(paneId: PaneId) {
-  const store = useSettings.getState();
+  const store = useLayoutStore.getState();
   const hidden = store.hiddenPanes ?? ({} as Record<PaneId, boolean>);
-  store.set('hiddenPanes', { ...hidden, [paneId]: !hidden[paneId] });
+  store.setHiddenPanes({ ...hidden, [paneId]: !hidden[paneId] });
 }
 
 export function setupPaneShortcuts() {

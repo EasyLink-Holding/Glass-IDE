@@ -1,5 +1,6 @@
+import { memo } from 'react';
 import SearchBar from '../../features/search/ui/common/SearchBar';
-import { useSettings } from '../../lib/settings/store';
+import { useAppearanceStore } from '../../lib/settings/appearanceStore';
 import WindowControls from '../controls/WindowControls';
 import SettingsButton from '../ui/buttons/SettingsButton';
 
@@ -7,8 +8,8 @@ import SettingsButton from '../ui/buttons/SettingsButton';
  * Top horizontal navigation bar above everything.
  */
 
-export default function TopNavigationPane() {
-  const showNavBackground = useSettings((s) => s.showNavBackground);
+function TopNavigationPane() {
+  const showNavBackground = useAppearanceStore((state) => state.showNavBackground);
   return (
     <header
       className={`flex h-16 w-full items-center justify-between rounded-lg ${showNavBackground ? 'border border-neutral-700 bg-neutral-800/60 backdrop-blur' : ''} px-2 z-20`}
@@ -24,3 +25,6 @@ export default function TopNavigationPane() {
     </header>
   );
 }
+
+// Export a memoized version to prevent unnecessary re-renders
+export default memo(TopNavigationPane);

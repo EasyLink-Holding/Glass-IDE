@@ -5,4 +5,8 @@ module.exports = {
     extend: {},
   },
   plugins: [],
+  experimental: {
+    // Drop unused base styles for smaller CSS output
+    optimizeUniversalDefaults: true,
+  },
 };

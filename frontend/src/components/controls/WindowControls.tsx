@@ -1,5 +1,6 @@
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { useSettings } from '../../lib/settings/store';
+import { memo } from 'react';
+import { useAppearanceStore } from '../../lib/settings/appearanceStore';
 
 const win = getCurrentWindow();
 
@@ -15,8 +16,8 @@ const btnBase = [
   'appearance-none p-0 border-0', // remove UA padding that caused pill shape
 ].join(' ');
 
-export default function WindowControls() {
-  const hide = useSettings((s) => s.hideSystemControls);
+function WindowControls() {
+  const hide = useAppearanceStore((state) => state.hideSystemControls);
   if (hide) return null;
 
   return (
@@ -44,3 +45,6 @@ export default function WindowControls() {
     </div>
   );
 }
+
+// Export a memoized version to prevent unnecessary re-renders
+export default memo(WindowControls);

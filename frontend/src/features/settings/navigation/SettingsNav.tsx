@@ -1,8 +1,19 @@
-import { Folders, GearSix, Keyboard, Sliders } from 'phosphor-react';
+import {
+  Folders as FoldersIcon,
+  GearSix as GearSixIcon,
+  Keyboard as KeyboardIcon,
+  Sliders as SlidersIcon,
+} from 'phosphor-react';
 import type { SectionId } from '../../../app/settings/SettingsPane';
+import { memoIcon } from '../../../lib/ui/memoIcon';
 import NavItem from './NavItem';
 
 // Using the consistent SectionId type imported from SettingsPane
+
+const Folders = memoIcon(FoldersIcon);
+const GearSix = memoIcon(GearSixIcon);
+const Keyboard = memoIcon(KeyboardIcon);
+const Sliders = memoIcon(SlidersIcon);
 
 interface Props {
   current: SectionId;

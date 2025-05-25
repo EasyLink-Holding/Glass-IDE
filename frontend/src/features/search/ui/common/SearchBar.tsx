@@ -1,6 +1,9 @@
-import { MagnifyingGlass } from 'phosphor-react';
+import { MagnifyingGlass as MagnifyingGlassIcon } from 'phosphor-react';
 import { useRef, useState } from 'react';
+import { memoIcon } from '../../../../lib/ui/memoIcon';
 import SearchDropdown from './SearchBox';
+
+const MagnifyingGlass = memoIcon(MagnifyingGlassIcon);
 
 /**
  * Pure-UI pill-style search bar shown in the top navigation.

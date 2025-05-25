@@ -13,9 +13,7 @@
     "rustcheck": "cd src-tauri && cargo check",
     "release:bump": "node scripts/bump-version.js"
   },
-  "workspaces": [
-    "frontend"
-  ],
+  "workspaces": ["frontend"],
   "packageManager": "pnpm@10.8.1",
   "devDependencies": {
     "@biomejs/biome": "1.9.4"

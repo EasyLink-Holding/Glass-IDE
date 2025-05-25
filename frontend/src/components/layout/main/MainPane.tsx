@@ -1,5 +1,5 @@
 /** Center main pane */
-import { type ReactNode, Suspense, lazy } from 'react';
+import { type ReactNode, Suspense, lazy, useMemo } from 'react';
 import { useView } from '../../../contexts/ViewContext';
 import ErrorBoundary from '../../common/ErrorBoundary';
 
@@ -15,51 +15,41 @@ const OrganizationPane = lazy(() => import('../../../app/organization/Organizati
 const EditorPane = lazy(() => import('../../../app/editor/EditorPane'));
 const HomePane = lazy(() => import('../../../app/home/HomePane'));
 
+// Memoize pane switching to prevent unnecessary re-renders of the switch body
 export default function MainPane() {
   const view = useView();
 
-  let content: ReactNode;
-  switch (view) {
-    case 'settings':
-      content = <SettingsPane />;
-      break;
-    case 'editor':
-      // keep retro compatibility: editor main view still shows EditorPane
-      content = <EditorPane />;
-      break;
-    case 'versionControl':
-      content = <VersionControlPane />;
-      break;
-    case 'database':
-      content = <DatabasePane />;
-      break;
-    case 'docs':
-      content = <DocsPane />;
-      break;
-    case 'deployment':
-      content = <DeploymentPane />;
-      break;
-    case 'marketplace':
-      content = <MarketplacePane />;
-      break;
-    case 'teams':
-      content = <TeamsPane />;
-      break;
-    case 'organization':
-      content = <OrganizationPane />;
-      break;
-    case 'home':
-      content = <HomePane />;
-      break;
-    default:
-      content = <HomePane />;
-      break;
-  }
+  const content = useMemo<ReactNode>(() => {
+    switch (view) {
+      case 'settings':
+        return <SettingsPane />;
+      case 'editor':
+        return <EditorPane />; // retro-compat: main editor view
+      case 'versionControl':
+        return <VersionControlPane />;
+      case 'database':
+        return <DatabasePane />;
+      case 'docs':
+        return <DocsPane />;
+      case 'deployment':
+        return <DeploymentPane />;
+      case 'marketplace':
+        return <MarketplacePane />;
+      case 'teams':
+        return <TeamsPane />;
+      case 'organization':
+        return <OrganizationPane />;
+      case 'home':
+        return <HomePane />;
+      default:
+        return <HomePane />;
+    }
+  }, [view]);
 
   return (
     <main className="flex-1 min-w-0 overflow-hidden rounded-lg border border-neutral-700 bg-neutral-900/60 p-2 text-neutral-100">
       <ErrorBoundary>
-        <Suspense fallback={<div className="p-4 text-neutral-400">Loading…</div>}>
+        <Suspense fallback={<div className="h-full w-full animate-pulse bg-neutral-800/40" />}>
           {content}
         </Suspense>
       </ErrorBoundary>

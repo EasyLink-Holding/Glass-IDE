@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { templates } from '../../../../lib/layout/templates';
 import type { SpaceId } from '../../../../lib/layout/types';
 import type { PaneId } from '../../../../lib/layout/types';
-import { useSettings } from '../../../../lib/settings/store';
+import { useLayoutStore } from '../../../../lib/settings/layoutStore';
 import SaveButton from '../../ui/SaveButton';
 import PaneList from './layout/PaneList';
 import SlotVisualizer from './layout/SlotVisualizer';
@@ -18,10 +18,12 @@ export default function LayoutSubSection() {
   const [currentSpace, setCurrentSpace] = useState<SpaceId>('editor');
   const [selected, setSelected] = useState<PaneId | null>(null);
 
-  // Access settings from store
-  const spaceTemplateMap = useSettings((s) => s.spaceTemplateMap);
-  const spacePaneSlotMaps = useSettings((s) => s.spacePaneSlotMaps);
-  const setSettings = useSettings((s) => s.set);
+  // Access settings from layout store
+  const spaceTemplateMap = useLayoutStore((state) => state.spaceTemplateMap);
+  const spacePaneSlotMaps = useLayoutStore((state) => state.spacePaneSlotMaps);
+  // Get setters from layout store
+  const setSpaceTemplateMap = useLayoutStore((state) => state.setSpaceTemplateMap);
+  const setSpacePaneSlotMaps = useLayoutStore((state) => state.setSpacePaneSlotMaps);
 
   // Local state for temporary modifications before saving
   const [localTemplateMap, setLocalTemplateMap] = useState<Record<SpaceId, string>>({
@@ -93,8 +95,9 @@ export default function LayoutSubSection() {
    * Save all changes to settings
    */
   function handleSave() {
-    setSettings('spaceTemplateMap', localTemplateMap);
-    setSettings('spacePaneSlotMaps', localPaneSlotMaps);
+    // Use the specialized setters from the layout store
+    setSpaceTemplateMap(localTemplateMap);
+    setSpacePaneSlotMaps(localPaneSlotMaps);
   }
 
   // ----- Render Component -----

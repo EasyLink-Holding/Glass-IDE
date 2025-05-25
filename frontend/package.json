@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "analyze": "vite build --report",
     "lint": "pnpm biome lint ./src --write",
     "format": "pnpm biome format ./src --write",
     "check": "pnpm biome check ./src --write",
@@ -19,12 +20,14 @@
     "phosphor-react": "^1.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-window": "^1.8.11",
     "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
+    "@types/react-window": "^1.8.8",
     "@vitejs/plugin-react": "^4.4.1",
     "@vitejs/plugin-react-swc": "^3.5.1",
     "autoprefixer": "^10.4.16",

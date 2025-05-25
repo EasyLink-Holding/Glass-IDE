@@ -1,4 +1,6 @@
-import { CaretDown } from 'phosphor-react';
+import { CaretDown as CaretDownIcon } from 'phosphor-react';
+import { memoIcon } from '../../../lib/ui/memoIcon';
+const CaretDown = memoIcon(CaretDownIcon);
 import type { ChangeEvent, SelectHTMLAttributes } from 'react';
 
 // Generic select component used across the app

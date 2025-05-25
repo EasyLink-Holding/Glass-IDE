@@ -2,15 +2,20 @@
  * Keyboard Shortcuts settings panel
  * Allows users to view & customize keyboard bindings stored in settings
  */
-import { useEffect, useMemo, useState } from 'react';
-import { useSettings } from '../../../lib/settings/store';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { FixedSizeList as List, type ListChildComponentProps } from 'react-window';
+import { useShortcutsStore } from '../../../lib/settings/shortcutsStore';
 import { formatShortcut } from '../../../lib/shortcuts/helpers';
 import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS } from '../../../lib/shortcuts/shortcuts';
 import { useShortcutRecorder } from '../../../lib/shortcuts/useShortcutRecorder';
 
-export default function ShortcutsSection() {
-  const shortcuts = useSettings((s) => s.shortcuts);
-  const setSettings = useSettings((s) => s.set);
+/**
+ * Component for managing keyboard shortcuts settings
+ */
+function ShortcutsSection() {
+  // Get shortcuts from dedicated shortcuts store
+  const shortcuts = useShortcutsStore((s) => s.shortcuts);
+  const setShortcuts = useShortcutsStore((s) => s.setShortcuts);
 
   const [local, setLocal] = useState({ ...shortcuts });
   const { recordingFor, captured, start, stop } = useShortcutRecorder();
@@ -30,13 +35,43 @@ export default function ShortcutsSection() {
 
   const dirty = JSON.stringify(local) !== JSON.stringify(shortcuts);
 
-  function handleSave() {
-    setSettings('shortcuts', local);
-  }
+  const handleSave = useCallback(() => {
+    setShortcuts(local);
+  }, [local, setShortcuts]);
 
-  function cancel() {
+  const cancel = useCallback(() => {
     stop();
-  }
+  }, [stop]);
+
+  // Prepare row data for react-window
+  const ids = useMemo(() => Object.keys(DEFAULT_SHORTCUTS) as ActionId[], []);
+
+  const Row = useCallback(
+    ({ index, style }: ListChildComponentProps) => {
+      const id = ids[index];
+      const combo = local[id] ?? '';
+      const dup = duplicates.includes(combo);
+      return (
+        <div
+          style={style}
+          className="grid grid-cols-[1fr_150px_auto] items-center border-t border-neutral-700 px-2"
+        >
+          <div>{ACTION_LABELS[id]}</div>
+          <div className={dup ? 'text-red-400' : ''}>{combo ? formatShortcut(combo) : '—'}</div>
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => (recordingFor === id ? cancel() : start(id))}
+              className="rounded bg-neutral-700 px-2 py-0.5 text-xs hover:bg-neutral-600"
+            >
+              {recordingFor === id ? 'Press keys… (Esc to cancel)' : 'Change'}
+            </button>
+          </div>
+        </div>
+      );
+    },
+    [ids, local, duplicates, recordingFor, cancel, start]
+  );
 
   return (
     <div className="space-y-6">
@@ -45,40 +80,25 @@ export default function ShortcutsSection() {
         <p className="text-neutral-400 text-sm">Click “Change” then press a new key combination.</p>
       </div>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-left text-neutral-400">
-            <th className="py-1 font-normal">Action</th>
-            <th className="py-1 font-normal">Binding</th>
-            <th className="py-1 font-normal" />
-          </tr>
-        </thead>
-        <tbody>
-          {(Object.keys(DEFAULT_SHORTCUTS) as ActionId[]).map((id) => {
-            const combo = local[id] ?? '';
-            const dup = duplicates.includes(combo);
-            return (
-              <tr key={id} className="border-t border-neutral-700">
-                <td className="py-1.5 pr-2">{ACTION_LABELS[id]}</td>
-                <td className={`py-1.5 ${dup ? 'text-red-400' : ''}`}>
-                  {combo ? formatShortcut(combo) : '—'}
-                </td>
-                <td className="py-1.5 text-right">
-                  <button
-                    type="button"
-                    onClick={() => (recordingFor === id ? cancel() : start(id))}
-                    className="rounded bg-neutral-700 px-2 py-0.5 text-xs hover:bg-neutral-600"
-                  >
-                    {recordingFor === id ? 'Press keys… (Esc to cancel)' : 'Change'}
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {/* Header row */}
+      <div className="grid grid-cols-[1fr_150px_auto] text-left text-neutral-400 text-sm px-2 py-1">
+        <span>Action</span>
+        <span>Binding</span>
+        <span />
+      </div>
 
-      <div className="flex gap-2">
+      {/* Virtualised list */}
+      <List
+        height={Math.min(ids.length * 40, 400)}
+        itemCount={ids.length}
+        itemSize={40}
+        width="100%"
+        className="text-sm"
+      >
+        {Row}
+      </List>
+
+      <div className="flex gap-2 mt-4">
         <button
           type="button"
           disabled={!dirty || duplicates.length > 0}
@@ -103,3 +123,6 @@ export default function ShortcutsSection() {
     </div>
   );
 }
+
+// Export the memoized component for better performance
+export default memo(ShortcutsSection);

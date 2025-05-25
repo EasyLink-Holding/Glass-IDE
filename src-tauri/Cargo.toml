@@ -24,3 +24,7 @@ log = "0.4"
 tauri = { version = "2.5.0", features = ["macos-private-api"] }
 tauri-plugin-log = "2.0.0-rc"
 window-vibrancy = "0.6.0"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1

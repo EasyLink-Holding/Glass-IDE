@@ -1,7 +1,7 @@
 import { listen } from '@tauri-apps/api/event';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { useSettings } from './lib/settings/store';
+import { useLayoutStore } from './lib/settings/layoutStore';
 import './index.css';
 import App from './App.tsx';
 
@@ -16,6 +16,6 @@ if (rootElement) {
 
   // Listen for reset-layout events from Tauri menu
   listen('reset-layout', () => {
-    useSettings.getState().resetLayout();
+    useLayoutStore.getState().resetLayout();
   });
 }

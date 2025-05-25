@@ -1,12 +1,15 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod commands;
 mod menu;
 
 use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
+        // Expose dynamic batch command handler
+        .invoke_handler(tauri::generate_handler![commands::batch_commands])
         .setup(|app| {
             #[cfg_attr(
                 not(any(target_os = "macos", target_os = "windows")),

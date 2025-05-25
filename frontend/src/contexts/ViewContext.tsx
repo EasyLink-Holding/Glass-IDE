@@ -10,6 +10,7 @@ interface WorkspaceCtx {
   setSpace: Dispatch<SetStateAction<SpaceId>>;
   setView: Dispatch<SetStateAction<MainView>>;
   toggleSettings: () => void;
+  switchSpace: (space: SpaceId) => void;
 }
 
 const Ctx = createContext<WorkspaceCtx | null>(null);
@@ -17,8 +18,15 @@ const Ctx = createContext<WorkspaceCtx | null>(null);
 // Externally accessible helper for toggling settings
 let externalToggleSettings: (() => void) | null = null;
 
+// Externally accessible helper for switching space
+let externalSwitchSpace: ((space: SpaceId) => void) | null = null;
+
 export function toggleSettings() {
   externalToggleSettings?.();
+}
+
+export function switchSpace(space: SpaceId) {
+  externalSwitchSpace?.(space);
 }
 
 export function WorkspaceProvider({ children }: { children: ReactNode }) {
@@ -41,8 +49,15 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
         return 'settings';
       });
     };
+
+    externalSwitchSpace = (s: SpaceId) => {
+      setSpace(s);
+      setView(s);
+    };
+
     return () => {
       externalToggleSettings = null;
+      externalSwitchSpace = null;
     };
   }, []);
 
@@ -94,6 +109,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     setSpace,
     setView,
     toggleSettings: () => externalToggleSettings?.(),
+    switchSpace: (space: SpaceId) => externalSwitchSpace?.(space),
   };
 
   return <Ctx.Provider value={ctxValue}>{children}</Ctx.Provider>;

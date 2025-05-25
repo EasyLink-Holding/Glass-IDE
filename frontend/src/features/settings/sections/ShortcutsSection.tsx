@@ -4,65 +4,38 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useSettings } from '../../../lib/settings/store';
-import { type ActionId, DEFAULT_SHORTCUTS, actionLabels } from '../../../lib/shortcuts/shortcuts';
-
-function formatShortcut(shortcut: string) {
-  const parts = shortcut.split('+');
-  return parts
-    .map((part) => {
-      if (part === 'cmd') return '⌘';
-      if (part === 'ctrl') return 'Ctrl';
-      if (part === 'alt') return 'Alt';
-      if (part === 'shift') return 'Shift';
-      return part;
-    })
-    .join('+');
-}
+import { formatShortcut } from '../../../lib/shortcuts/helpers';
+import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS } from '../../../lib/shortcuts/shortcuts';
+import { useShortcutRecorder } from '../../../lib/shortcuts/useShortcutRecorder';
 
 export default function ShortcutsSection() {
   const shortcuts = useSettings((s) => s.shortcuts);
   const setSettings = useSettings((s) => s.set);
 
   const [local, setLocal] = useState({ ...shortcuts });
-  const [recording, setRecording] = useState<ActionId | null>(null);
+  const { recordingFor, captured, start, stop } = useShortcutRecorder();
 
-  // Capture next key stroke when recording is active
+  // Apply captured combo
   useEffect(() => {
-    if (!recording) return;
-
-    function handler(e: KeyboardEvent) {
-      e.preventDefault();
-      const parts: string[] = [];
-      if (e.metaKey) parts.push('cmd');
-      if (e.ctrlKey) parts.push('ctrl');
-      if (e.altKey) parts.push('alt');
-      if (e.shiftKey) parts.push('shift');
-      if (e.key && !['Meta', 'Control', 'Alt', 'Shift'].includes(e.key)) {
-        parts.push(e.key.toLowerCase());
-      }
-      const combo = parts.join('+');
-      if (combo) setLocal((prev) => ({ ...prev, [recording as ActionId]: combo }));
-      setRecording(null);
+    if (recordingFor && captured) {
+      setLocal((prev) => ({ ...prev, [recordingFor]: captured }));
     }
-
-    window.addEventListener('keydown', handler, { capture: true });
-    return () =>
-      window.removeEventListener('keydown', handler, { capture: true } as EventListenerOptions);
-  }, [recording]);
+  }, [recordingFor, captured]);
 
   // Detect duplicate bindings (very simple)
-  const duplicates = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const c of Object.values(local)) {
-      counts[c] = (counts[c] ?? 0) + 1;
-    }
-    return Object.keys(counts).filter((k) => counts[k] > 1);
-  }, [local]);
+  const duplicates = useMemo(
+    () => Object.values(local).filter((c, i, arr) => arr.indexOf(c) !== i),
+    [local]
+  );
 
   const dirty = JSON.stringify(local) !== JSON.stringify(shortcuts);
 
   function handleSave() {
     setSettings('shortcuts', local);
+  }
+
+  function cancel() {
+    stop();
   }
 
   return (
@@ -86,17 +59,17 @@ export default function ShortcutsSection() {
             const dup = duplicates.includes(combo);
             return (
               <tr key={id} className="border-t border-neutral-700">
-                <td className="py-1.5 pr-2">{actionLabels[id]}</td>
+                <td className="py-1.5 pr-2">{ACTION_LABELS[id]}</td>
                 <td className={`py-1.5 ${dup ? 'text-red-400' : ''}`}>
                   {combo ? formatShortcut(combo) : '—'}
                 </td>
                 <td className="py-1.5 text-right">
                   <button
                     type="button"
-                    onClick={() => setRecording(id)}
+                    onClick={() => (recordingFor === id ? cancel() : start(id))}
                     className="rounded bg-neutral-700 px-2 py-0.5 text-xs hover:bg-neutral-600"
                   >
-                    {recording === id ? 'Press…' : 'Change'}
+                    {recordingFor === id ? 'Press keys… (Esc to cancel)' : 'Change'}
                   </button>
                 </td>
               </tr>

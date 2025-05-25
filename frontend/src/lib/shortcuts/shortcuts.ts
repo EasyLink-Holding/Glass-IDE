@@ -1,41 +1,22 @@
 // Typed via custom declaration in src/types/hotkeys-js.d.ts
 import hotkeys from 'hotkeys-js';
 import { useEffect, useRef } from 'react';
-import { toggleSettings } from '../../contexts/ViewContext';
+import { switchSpace, toggleSettings } from '../../contexts/ViewContext';
 import type { PaneId } from '../layout/types';
 import { useSettings } from '../settings/store';
-import { type ActionId, SHORTCUT_DEFS } from './bindings';
+import { ACTION_LABELS, type ActionId, DEFAULT_SHORTCUTS, type ShortcutMap } from './bindings';
 import { MOD, formatShortcut, isMac } from './utils';
-
-// -----------------------------------------------------------------------------
-// Derived constants from definitions ------------------------------------------
-// -----------------------------------------------------------------------------
-
-export const DEFAULT_SHORTCUTS: Record<ActionId, string> = Object.fromEntries(
-  SHORTCUT_DEFS.map((d) => [d.id, d.default])
-) as Record<ActionId, string>;
-
-export const actionLabels: Record<ActionId, string> = Object.fromEntries(
-  SHORTCUT_DEFS.map((d) => [d.id, d.label])
-) as Record<ActionId, string>;
-
-export type ShortcutMap = Record<string, string>;
-
-export { isMac, MOD, formatShortcut };
-
-// Re-export type for convenience
-export type { ActionId };
 
 // -----------------------------------------------------------------------------
 // Runtime registry -------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
-const actionHandlers: Record<string, () => void> = {};
+const actionHandlers: Partial<Record<ActionId, () => void>> = {};
 
 /**
  * Register a handler for an action. Call at module scope of each feature.
  */
-export function registerShortcut(actionId: string, handler: () => void) {
+export function registerShortcut(actionId: ActionId, handler: () => void) {
   actionHandlers[actionId] = handler;
 }
 
@@ -57,7 +38,7 @@ export function useShortcutListener() {
     }
     boundKeysRef.current = [];
 
-    for (const [actionId, keyCombo] of Object.entries(shortcuts)) {
+    for (const [actionId, keyCombo] of Object.entries(shortcuts) as [ActionId, string][]) {
       if (!keyCombo) continue;
 
       hotkeys(keyCombo, (e: KeyboardEvent) => {
@@ -103,5 +84,22 @@ export function setupPaneShortcuts() {
   registerShortcut('toggle.settings', toggleSettings);
 }
 
+export function setupSpaceShortcuts() {
+  registerShortcut('go.home', () => switchSpace('home'));
+  registerShortcut('go.editor', () => switchSpace('editor'));
+  registerShortcut('go.versionControl', () => switchSpace('versionControl'));
+  registerShortcut('go.database', () => switchSpace('database'));
+  registerShortcut('go.docs', () => switchSpace('docs'));
+  registerShortcut('go.deployment', () => switchSpace('deployment'));
+  registerShortcut('go.marketplace', () => switchSpace('marketplace'));
+  registerShortcut('go.teams', () => switchSpace('teams'));
+  registerShortcut('go.organization', () => switchSpace('organization'));
+}
+
 // Ensure built-ins are registered when this module is imported.
 setupPaneShortcuts();
+setupSpaceShortcuts();
+
+export { DEFAULT_SHORTCUTS, ACTION_LABELS };
+export { isMac, MOD, formatShortcut };
+export type { ShortcutMap, ActionId };

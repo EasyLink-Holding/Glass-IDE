@@ -14,6 +14,7 @@ import { useCallback } from 'react';
 import type { PaneId, SpaceId } from '../layout/types';
 // Import types we need
 import type { ActionId } from '../shortcuts/bindings';
+import { DEFAULT_SHORTCUTS } from '../shortcuts/bindings';
 import { useSettings } from './store';
 
 // UI Settings
@@ -115,9 +116,8 @@ export function useShortcutSettings() {
 
   // Reset all shortcuts to defaults
   const resetShortcuts = useCallback(() => {
-    const { resetAllData } = useSettings.getState();
-    resetAllData();
-  }, []);
+    set('shortcuts', { ...DEFAULT_SHORTCUTS });
+  }, [set]);
 
   return {
     // Properties

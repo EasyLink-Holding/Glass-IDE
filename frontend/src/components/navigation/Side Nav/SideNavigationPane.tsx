@@ -37,15 +37,33 @@ const items: Item[] = [
 
 // Prefetch pane chunks on hover to minimize perceived latency
 const panePrefetchers: Record<SpaceId, () => void> = {
-  home: () => { void import(/* webpackPrefetch: true */ '../../../app/home/HomePane'); },
-  editor: () => { void import(/* webpackPrefetch: true */ '../../../app/editor/EditorPane'); },
-  versionControl: () => { void import(/* webpackPrefetch: true */ '../../../app/versionControl/VersionControlPane'); },
-  database: () => { void import(/* webpackPrefetch: true */ '../../../app/database/DatabasePane'); },
-  docs: () => { void import(/* webpackPrefetch: true */ '../../../app/docs/DocsPane'); },
-  deployment: () => { void import(/* webpackPrefetch: true */ '../../../app/deployment/DeploymentPane'); },
-  marketplace: () => { void import(/* webpackPrefetch: true */ '../../../app/marketplace/MarketplacePane'); },
-  teams: () => { void import(/* webpackPrefetch: true */ '../../../app/teams/TeamsPane'); },
-  organization: () => { void import(/* webpackPrefetch: true */ '../../../app/organization/OrganizationPane'); },
+  home: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/home/HomePane');
+  },
+  editor: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/editor/EditorPane');
+  },
+  versionControl: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/versionControl/VersionControlPane');
+  },
+  database: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/database/DatabasePane');
+  },
+  docs: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/docs/DocsPane');
+  },
+  deployment: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/deployment/DeploymentPane');
+  },
+  marketplace: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/marketplace/MarketplacePane');
+  },
+  teams: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/teams/TeamsPane');
+  },
+  organization: () => {
+    void import(/* webpackPrefetch: true */ '../../../app/organization/OrganizationPane');
+  },
 };
 
 export default function SideNavigationPane() {

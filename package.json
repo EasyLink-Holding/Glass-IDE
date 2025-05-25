@@ -10,7 +10,8 @@
     "lint": "cd frontend && pnpm lint",
     "format": "cd frontend && pnpm format",
     "check": "cd frontend && pnpm check",
-    "rustcheck": "cd src-tauri && cargo check"
+    "rustcheck": "cd src-tauri && cargo check",
+    "release:bump": "node scripts/bump-version.js"
   },
   "workspaces": ["frontend"],
   "packageManager": "pnpm@10.8.1",

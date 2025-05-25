@@ -1,7 +1,7 @@
 {
   "name": "glass-ide-root",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Workspace root for Glass IDE (Tauri + React)",
   "scripts": {
     "dev": "cd frontend && pnpm dev",
@@ -13,7 +13,9 @@
     "rustcheck": "cd src-tauri && cargo check",
     "release:bump": "node scripts/bump-version.js"
   },
-  "workspaces": ["frontend"],
+  "workspaces": [
+    "frontend"
+  ],
   "packageManager": "pnpm@10.8.1",
   "devDependencies": {
     "@biomejs/biome": "1.9.4"

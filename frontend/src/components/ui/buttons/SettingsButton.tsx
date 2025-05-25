@@ -1,5 +1,6 @@
 import { GearSix } from 'phosphor-react';
 import { useSettingsToggle } from '../../../hooks/useSettingsToggle';
+import NavButton from './NavButton';
 
 /**
  * Settings toggle button component
@@ -7,17 +8,9 @@ import { useSettingsToggle } from '../../../hooks/useSettingsToggle';
  */
 export default function SettingsButton() {
   // Use our custom hook for toggling settings
-  const { toggleSettings } = useSettingsToggle();
+  const { toggleSettings, isSettingsOpen } = useSettingsToggle();
 
   return (
-    <button
-      type="button"
-      onClick={toggleSettings}
-      aria-label="Settings"
-      className="p-1 text-neutral-200 hover:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-500"
-      data-no-drag
-    >
-      <GearSix size={20} weight="regular" />
-    </button>
+    <NavButton icon={GearSix} label="Settings" isActive={isSettingsOpen} onClick={toggleSettings} />
   );
 }

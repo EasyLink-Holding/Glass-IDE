@@ -16,6 +16,7 @@ import type { ComponentType } from 'react';
 import { useWorkspace } from '../../../contexts/ViewContext';
 import type { SpaceId } from '../../../lib/layout/types';
 import { useSettings } from '../../../lib/settings/store';
+import NavButton from '../../ui/buttons/NavButton';
 
 interface Item {
   id: SpaceId;
@@ -76,22 +77,19 @@ export default function SideNavigationPane() {
       aria-label="Primary"
       className={`flex h-full w-16 shrink-0 flex-col items-center gap-3 rounded-lg ${showNavBackground ? 'border border-neutral-700 bg-neutral-800/60 backdrop-blur' : ''} py-3 px-2`}
     >
-      {items.map(({ id, icon: Icon, tip }) => (
-        <button
+      {items.map(({ id, icon, tip }) => (
+        <NavButton
           key={id}
-          type="button"
-          title={tip}
-          aria-label={tip}
-          data-testid={`nav-${id}`}
+          icon={icon}
+          label={tip}
+          testId={`nav-${id}`}
+          isActive={space === id}
           onMouseEnter={() => panePrefetchers[id]()}
           onClick={() => {
             setSpace(id);
             setView(id);
           }}
-          className={`p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-neutral-500 ${space === id ? 'bg-neutral-700 text-white' : 'text-neutral-200 hover:text-neutral-100'}`}
-        >
-          <Icon size={20} weight={space === id ? 'fill' : 'regular'} />
-        </button>
+        />
       ))}
     </nav>
   );

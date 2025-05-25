@@ -46,16 +46,40 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  // URL hash → #space=view  (simple impl, no parsing safety)
+  // URL hash management → #space=view
   useEffect(() => {
-    const hash = window.location.hash.replace('#', '');
-    if (!hash) return;
-    const [hashSpace, hashView] = hash.split('=');
-    if (SPACES.includes(hashSpace as SpaceId)) {
-      setSpace(hashSpace as SpaceId);
-    }
-    if (VALID_VIEWS.includes((hashView ?? hashSpace) as MainView)) {
-      setView((hashView ?? hashSpace) as MainView);
+    try {
+      // Extract hash without the '#' symbol
+      const hash = window.location.hash.replace(/^#/, '');
+      if (!hash) return;
+
+      // Handle different hash formats
+      let spaceId: string | null = null;
+      let viewId: string | null = null;
+
+      if (hash.includes('=')) {
+        // Format: #space=view
+        const parts = hash.split('=');
+        spaceId = parts[0] || null;
+        viewId = parts[1] || null;
+      } else {
+        // Format: #space (view defaults to space)
+        spaceId = hash;
+        viewId = hash;
+      }
+
+      // Validate and set space if valid
+      if (spaceId && SPACES.includes(spaceId as SpaceId)) {
+        setSpace(spaceId as SpaceId);
+      }
+
+      // Validate and set view if valid
+      if (viewId && VALID_VIEWS.includes(viewId as MainView)) {
+        setView(viewId as MainView);
+      }
+    } catch (error) {
+      console.warn('Error parsing URL hash:', error);
+      // Fallback to defaults on error
     }
   }, []);
 

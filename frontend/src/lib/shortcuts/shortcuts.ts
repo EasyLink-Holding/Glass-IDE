@@ -1,7 +1,7 @@
 // Typed via custom declaration in src/types/hotkeys-js.d.ts
 import hotkeys from 'hotkeys-js';
 import { useEffect, useRef } from 'react';
-import { toggleSettingsView } from '../../contexts/ViewContext';
+import { toggleSettings } from '../../contexts/ViewContext';
 import type { PaneId } from '../layout/types';
 import { useSettings } from '../settings/store';
 import { type ActionId, SHORTCUT_DEFS } from './bindings';
@@ -100,7 +100,7 @@ export function setupPaneShortcuts() {
   registerShortcut('toggle.explorer', () => togglePane('explorer'));
   registerShortcut('toggle.editor', () => togglePane('editor'));
   registerShortcut('toggle.console', () => togglePane('console'));
-  registerShortcut('toggle.settings', () => toggleSettingsView());
+  registerShortcut('toggle.settings', toggleSettings);
 }
 
 // Ensure built-ins are registered when this module is imported.

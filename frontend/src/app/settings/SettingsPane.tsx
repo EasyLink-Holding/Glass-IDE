@@ -12,7 +12,8 @@ const sectionMap = {
   shortcuts: ShortcutsSection,
 } as const;
 
-type SectionId = keyof typeof sectionMap;
+// Use a consistent type definition for section IDs across the app
+export type SectionId = keyof typeof sectionMap;
 
 export default function SettingsPane() {
   const [current, setCurrent] = useState<SectionId>('general');

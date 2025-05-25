@@ -1,10 +1,10 @@
-import { GearSix } from 'phosphor-react';
-import { toggleSettings } from '../../contexts/ViewContext';
 import SearchBar from '../../features/search/ui/common/SearchBar';
+import WindowControls from '../controls/WindowControls';
+import SettingsButton from '../ui/buttons/SettingsButton';
+
 /**
  * Top horizontal navigation bar above everything.
  */
-import WindowControls from '../controls/WindowControls';
 
 export default function TopNavigationPane() {
   return (
@@ -14,15 +14,7 @@ export default function TopNavigationPane() {
         <SearchBar />
       </div>
       <div className="ml-auto flex items-center">
-        <button
-          type="button"
-          onClick={toggleSettings}
-          aria-label="Settings"
-          className="p-1 text-neutral-200 hover:text-neutral-100 focus:outline-none focus:ring-2 focus:ring-neutral-500"
-          data-no-drag
-        >
-          <GearSix size={20} weight="regular" />
-        </button>
+        <SettingsButton />
       </div>
       {/* place for title or menu */}
     </header>

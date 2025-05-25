@@ -7,11 +7,16 @@ import type { ShortcutMap } from '../shortcuts/shortcuts';
 import { DEFAULT_SHORTCUTS } from '../shortcuts/shortcuts';
 
 export interface Settings {
+  // UI Settings
   hideSystemControls: boolean;
+
+  // Layout Settings
   spaceTemplateMap: Record<SpaceId, string>; // Per-space template mapping
   spacePaneSlotMaps: Record<SpaceId, Record<PaneId, string>>; // Per-space pane slot mappings
-  shortcuts: ShortcutMap;
   hiddenPanes: Record<PaneId, boolean>;
+
+  // Shortcut Settings
+  shortcuts: ShortcutMap;
 }
 
 export const defaultSettings: Settings = {

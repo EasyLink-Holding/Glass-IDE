@@ -1,7 +1,8 @@
 import { Folders, GearSix, Keyboard, Sliders } from 'phosphor-react';
+import type { SectionId } from '../../../app/settings/SettingsPane';
 import NavItem from './NavItem';
 
-type SectionId = 'general' | 'workspace' | 'customization' | 'shortcuts';
+// Using the consistent SectionId type imported from SettingsPane
 
 interface Props {
   current: SectionId;

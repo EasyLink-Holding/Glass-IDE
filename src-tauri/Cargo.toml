@@ -27,6 +27,7 @@ anyhow = "1.0"
 tauri = { version = "2.5.0", features = ["macos-private-api"] }
 tauri-plugin-log = "2.0.0-rc"
 window-vibrancy = "0.6.0"
+walkdir = "2.4"
 
 [profile.release]
 lto = "thin"

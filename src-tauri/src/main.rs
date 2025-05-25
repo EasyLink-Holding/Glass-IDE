@@ -9,7 +9,10 @@ use tauri::Manager;
 fn main() {
     tauri::Builder::default()
         // Expose dynamic batch command handler
-        .invoke_handler(tauri::generate_handler![commands::batch_commands])
+        .invoke_handler(tauri::generate_handler![
+            commands::batch_commands,
+            commands::fs::read_dir_snapshot
+        ])
         .setup(|app| {
             #[cfg_attr(
                 not(any(target_os = "macos", target_os = "windows")),

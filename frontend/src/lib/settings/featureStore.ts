@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PersistOptions } from 'zustand/middleware';
+import { createDebouncedJSONStorage } from '../zustand/debouncedStorage';
 
 // Define a union type of all known feature flag keys
 export type FeatureKey = 'experimentalLayout' | 'betaChat' | 'performanceMode';
@@ -40,6 +41,7 @@ export const useFeatureStore = create<FeatureStore>()(
     {
       name: 'glass-ide-features',
       version: 1,
-    } as PersistFeatureStore
+      storage: createDebouncedJSONStorage(),
+    } as unknown as PersistFeatureStore
   )
 );

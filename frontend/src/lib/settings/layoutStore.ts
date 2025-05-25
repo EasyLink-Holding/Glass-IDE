@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PersistOptions } from 'zustand/middleware';
 import { DEFAULT_SPACE_TEMPLATE_MAP } from '../layout/defaults';
+import { createDebouncedJSONStorage } from '../zustand/debouncedStorage';
 import type { Settings } from './schema';
 import { defaultSettings } from './schema';
 
@@ -52,6 +53,7 @@ export const useLayoutStore = create<LayoutStore>()(
     {
       name: 'glass-ide-layout',
       version: 1,
-    } as PersistLayoutStore
+      storage: createDebouncedJSONStorage(),
+    } as unknown as PersistLayoutStore
   )
 );

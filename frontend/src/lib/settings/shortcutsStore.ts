@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PersistOptions } from 'zustand/middleware';
 import { type ActionId, DEFAULT_SHORTCUTS, type ShortcutMap } from '../shortcuts/shortcuts';
+import { createDebouncedJSONStorage } from '../zustand/debouncedStorage';
 
 // Shortcuts Store - manages keyboard shortcuts
 interface ShortcutsStore {
@@ -37,6 +38,7 @@ export const useShortcutsStore = create<ShortcutsStore>()(
     {
       name: 'glass-ide-shortcuts',
       version: 1,
+      storage: createDebouncedJSONStorage(),
       migrate: (state: unknown, _version: number) => {
         // Simple migration from old format if needed
         const prev = (state ?? {}) as Partial<ShortcutsStore>;
@@ -47,6 +49,6 @@ export const useShortcutsStore = create<ShortcutsStore>()(
           shortcuts: { ...DEFAULT_SHORTCUTS, ...(prev.shortcuts || {}) },
         };
       },
-    } as PersistShortcutsStore
+    } as unknown as PersistShortcutsStore
   )
 );

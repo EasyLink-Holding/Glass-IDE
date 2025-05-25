@@ -2,6 +2,7 @@ import react from '@vitejs/plugin-react-swc';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import checker from 'vite-plugin-checker';
+import PurgeIcons from 'vite-plugin-purge-icons';
 
 // https://vite.dev/config/
 // -----------------------------------------------------------------------------
@@ -17,6 +18,10 @@ export default defineConfig({
     react(),
     // Enables out-of-the-box vendor chunk splitting
     splitVendorChunkPlugin(),
+    // Removes unused Phosphor icons (tree-shaking for icon sets)
+    PurgeIcons({
+      /* keep defaults */
+    }),
     // Type-checker runs in a separate thread – keeps HMR snappy
     checker({ typescript: true }),
     // `pnpm build` then open dist/stats.html to audit bundles

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { PersistOptions } from 'zustand/middleware';
+import { createDebouncedJSONStorage } from '../zustand/debouncedStorage';
 import { defaultSettings } from './schema';
 
 // Appearance Store - manages UI appearance configuration
@@ -69,6 +70,7 @@ export const useAppearanceStore = create<AppearanceStore>()(
     {
       name: 'glass-ide-appearance',
       version: 1,
-    } as PersistAppearanceStore
+      storage: createDebouncedJSONStorage(),
+    } as unknown as PersistAppearanceStore
   )
 );

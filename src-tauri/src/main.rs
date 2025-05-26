@@ -17,6 +17,10 @@ fn main() {
             // Indexer
             commands::indexer::build_index,
             commands::indexer::query_index,
+            // Content indexer
+            commands::content_indexer::build_content_index,
+            commands::content_indexer::query_content_index,
+            commands::system::memory_stats,
         ])
         .setup(|app| {
             #[cfg_attr(

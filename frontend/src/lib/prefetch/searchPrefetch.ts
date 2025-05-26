@@ -17,6 +17,8 @@ export async function preloadSearch(rootPath: string): Promise<void> {
   // Fire-and-forget index build to make first query instant.
   try {
     await batchedInvoke<number>('build_index', { path: rootPath });
+    // Fire content indexer in parallel – no await so both run concurrently
+    void batchedInvoke<number>('build_content_index', { path: rootPath });
   } catch (err) {
     console.error('preloadSearch: build_index failed', err);
   }

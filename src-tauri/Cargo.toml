@@ -34,6 +34,7 @@ tauri-plugin-dialog = "2"
 rayon = "1.10"
 fuzzy-matcher = "0.3"
 rocksdb = "0.22"
+sysinfo = "0.30"
 
 [profile.release]
 lto = "thin"

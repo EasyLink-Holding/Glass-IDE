@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useWorkspaceRoot } from '../../../../lib/workspace/workspaceStore';
+import { useContentSearch } from '../../lib/useContentSearch';
 import { useWorkspaceSearch } from '../../lib/useWorkspaceSearch';
 import { SearchResultsDropdown } from '../SearchResultsDropdown';
 
@@ -14,8 +15,16 @@ interface Props {
  */
 export default function SearchDropdown({ open, query }: Props) {
   const root = useWorkspaceRoot();
+
+  // Detect content-search mode when query starts with '>'
   const trimmed = useMemo(() => query.trim(), [query]);
-  const { results, loading, loadMore, hasMore } = useWorkspaceSearch(root ?? '', trimmed);
+  const contentMode = trimmed.startsWith('>');
+  const actualQuery = contentMode ? trimmed.slice(1) : trimmed;
+
+  // Call both hooks unconditionally to satisfy React Rules of Hooks
+  const wsHook = useWorkspaceSearch(root ?? '', actualQuery);
+  const ctHook = useContentSearch(root ?? '', actualQuery);
+  const { results, loading, loadMore, hasMore } = contentMode ? ctHook : wsHook;
   const [collapsed, setCollapsed] = useState(true);
 
   if (!query && !collapsed) setCollapsed(true);

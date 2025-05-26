@@ -10,3 +10,8 @@ pub mod fs;
 // New workspace indexer commands
 // ------------------------------
 pub mod indexer;
+
+// Content search indexer
+pub mod content_indexer;
+
+pub mod system;

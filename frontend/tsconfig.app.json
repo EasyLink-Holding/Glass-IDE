@@ -23,5 +23,6 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true
   },
+  "typeRoots": ["./src/types", "./node_modules/@types"],
   "include": ["src"]
 }

@@ -17,7 +17,10 @@
     "@msgpack/msgpack": "^3.1.2",
     "@solid-primitives/virtual": "^0.2.1",
     "@tauri-apps/api": "^2.0.0-alpha.11",
+    "fast-json-patch": "^3.1.1",
     "hotkeys-js": "^3.13.10",
+    "markdown-it": "^14.0.0",
+    "monaco-editor": "^0.48.0",
     "phosphor-icons": "^1.4.2",
     "phosphor-react": "^1.4.1",
     "phosphor-solid": "^1.1.5",
@@ -27,15 +30,13 @@
     "react-window": "^1.8.11",
     "solid-js": "^1.9.7",
     "vite-plugin-solid": "^2.11.6",
-    "zustand": "^4.5.2",
-    "markdown-it": "^14.0.0",
-    "fast-json-patch": "^3.1.1",
-    "monaco-editor": "^0.48.0"
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@preact/preset-vite": "^2.10.1",
     "@types/node": "^20.11.30",
+    "@types/markdown-it": "^14.0.3",
     "@types/react": "^19.1.2",
     "@types/react-dom": "^19.1.2",
     "@types/react-window": "^1.8.8",
@@ -49,8 +50,7 @@
     "typescript": "~5.8.3",
     "vite": "^6.3.5",
     "vite-plugin-checker": "^0.9.3",
-    "vite-plugin-monaco-editor": "^0.4.1",
-    "vite-plugin-purge-icons": "^0.10.0",
-    "@types/markdown-it": "^14.0.3"
+    "vite-plugin-monaco-editor": "^1.1.0",
+    "vite-plugin-purge-icons": "^0.10.0"
   }
 }

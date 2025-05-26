@@ -3,10 +3,13 @@
  * Add new heavy / CPU-bound utilities here and expose them by name.
  */
 
+import type { TokenizationResult } from '@glass/monaco-tokenization';
 import jsonpatch from 'fast-json-patch';
 import type { Operation } from 'fast-json-patch';
 import MarkdownIt from 'markdown-it';
 import type { Options as MarkdownItOptions } from 'markdown-it';
+import type * as monaco from 'monaco-editor';
+import { kindToScope, tokenizeJsLikeLine } from '../../lib/monaco/tokenKinds';
 
 export function deterministicStringify(obj: Record<string, unknown>): string {
   const visited = new WeakSet();
@@ -158,6 +161,29 @@ export function jsonDiff({ oldObj, newObj }: JsonDiffPayload): Operation[] {
   return (jsonpatch as { compare(a: unknown, b: unknown): Operation[] }).compare(oldObj, newObj);
 }
 
+// -----------------------------------------------------------------------------
+// Basic line tokenizer – extremely naive fallback used when real language
+// tokenisers are too heavy to load. Runs inside WorkerPool.
+// -----------------------------------------------------------------------------
+interface BasicTokenizeLinePayload {
+  lang: string;
+  line: string;
+}
+
+/**
+ * Very naive tokenizer: splits by whitespace and punctuation, assigns generic
+ * token type categories. Adequate as colourisation placeholder when heavy
+ * tokenisers are not loaded.
+ */
+export function basicTokenizeLine({ line }: BasicTokenizeLinePayload): TokenizationResult {
+  const tokens: { startIndex: number; scopes: string }[] = [];
+  for (const t of tokenizeJsLikeLine(line)) {
+    tokens.push({ startIndex: t.startIndex, scopes: kindToScope(t.kind) });
+  }
+  const dummyState: monaco.languages.IState = { clone: () => dummyState, equals: () => true };
+  return { tokens, endState: dummyState } as TokenizationResult;
+}
+
 // Map of exposed task names -> function
 export const taskRegistry: Record<string, (payload: unknown) => unknown> = {
   deterministicStringify: (p) => deterministicStringify(p as Record<string, unknown>),
@@ -165,6 +191,7 @@ export const taskRegistry: Record<string, (payload: unknown) => unknown> = {
   heavyFilterSort: (p) => heavyFilterSort(p as HeavyFilterSortPayload),
   mdToHtml: (p) => mdToHtml(p as MdToHtmlPayload),
   jsonDiff: (p) => jsonDiff(p as JsonDiffPayload),
+  basicTokenizeLine: (p) => basicTokenizeLine(p as BasicTokenizeLinePayload),
 };
 
 // Dynamic key union type for tasks

@@ -35,6 +35,9 @@ export default defineConfig({
         // Custom manual chunk rules to isolate heavy deps
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         manualChunks(id: string): string | undefined {
+          // Group search UI into its own chunk for preloading
+          if (id.includes('/features/search/')) return 'search';
+
           if (id.includes('node_modules')) {
             if (id.includes('monaco-editor')) return 'monaco';
             if (id.includes('phosphor-react')) return 'phosphor';

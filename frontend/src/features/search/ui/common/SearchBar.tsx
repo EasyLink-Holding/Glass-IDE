@@ -1,5 +1,6 @@
 import { MagnifyingGlass as MagnifyingGlassIcon } from 'phosphor-react';
 import { useRef, useState } from 'react';
+import { preloadSearch } from '../../../../lib/prefetch/searchPrefetch';
 import { memoIcon } from '../../../../lib/ui/memoIcon';
 import SearchDropdown from './SearchBox';
 
@@ -12,9 +13,14 @@ const MagnifyingGlass = memoIcon(MagnifyingGlassIcon);
 export default function SearchBar() {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const root = '.'; // TODO: real workspace root
 
   return (
-    <div className="relative w-full max-w-xs md:max-w-sm lg:max-w-md" data-no-drag>
+    <div
+      className="relative w-full max-w-xs md:max-w-sm lg:max-w-md"
+      data-no-drag
+      onMouseEnter={() => preloadSearch(root)}
+    >
       <label
         htmlFor="search-input"
         className="flex cursor-text items-center gap-2 rounded-full border border-neutral-600 bg-neutral-700/60 px-3 py-1 backdrop-blur focus-within:border-neutral-500"
@@ -26,7 +32,10 @@ export default function SearchBar() {
           type="text"
           placeholder="Search your project"
           className="w-full bg-transparent text-sm text-neutral-200 placeholder-neutral-400 focus:outline-none"
-          onFocus={() => setOpen(true)}
+          onFocus={() => {
+            preloadSearch(root);
+            setOpen(true);
+          }}
           onBlur={(e) => {
             // Close dropdown if focus leaves the container
             if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node)) {

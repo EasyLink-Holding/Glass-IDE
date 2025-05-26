@@ -134,6 +134,7 @@ pub async fn read_dir_snapshot(path: String, depth: usize) -> tauri::Result<Vec<
 
 #[tauri::command]
 /// Return immediate children of a directory (depth = 0 relative to the dir)
+#[allow(dead_code)]
 pub async fn read_dir_children(path: String) -> tauri::Result<Vec<FsNode>> {
     use anyhow::Error as AnyError;
     use std::fs as stdfs;

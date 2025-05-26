@@ -12,7 +12,11 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::batch_commands,
             commands::fs::read_dir_snapshot,
+            commands::fs::read_dir_children,
             commands::fs::start_fs_watch,
+            // Indexer
+            commands::indexer::build_index,
+            commands::indexer::query_index,
         ])
         .setup(|app| {
             #[cfg_attr(

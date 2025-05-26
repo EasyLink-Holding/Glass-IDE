@@ -56,4 +56,9 @@ pub async fn batch_commands<R: Runtime>(
 }
 
 pub mod fs;
-pub use fs::{read_dir_children, start_fs_watch};
+
+// ------------------------------
+// New workspace indexer commands
+// ------------------------------
+pub mod indexer;
+// (No re-exports needed; referenced via full paths)

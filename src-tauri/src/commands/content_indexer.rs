@@ -19,7 +19,7 @@ use std::time::SystemTime;
 use tauri::command;
 use walkdir::{DirEntry, WalkDir};
 
-const MAX_FILE_SIZE: u64 = 1 * 1024 * 1024; // 1 MB per file guard
+const MAX_FILE_SIZE: u64 = 1024 * 1024; // 1 MB per file guard
 const DEFAULT_PAGE_SIZE: usize = 150;
 
 #[derive(Clone)]

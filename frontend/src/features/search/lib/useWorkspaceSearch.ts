@@ -67,13 +67,13 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
         // Local fuzzy re-ranking in a background worker for extra snappiness
         if (debouncedQuery) {
           try {
-            raw = await runTask<string[]>('fuzzySearch', {
+            raw = await runTask<string[]>('heavyFilterSort', {
               items: raw,
               query: debouncedQuery,
               limit: PAGE_SIZE,
             });
           } catch (err) {
-            console.warn('Worker fuzzySearch failed – falling back to raw order', err);
+            console.warn('Worker heavyFilterSort failed – falling back to raw order', err);
           }
         }
 

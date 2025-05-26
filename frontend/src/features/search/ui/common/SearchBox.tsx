@@ -1,21 +1,24 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useWorkspaceRoot } from '../../../../lib/workspace/workspaceStore';
 import { useWorkspaceSearch } from '../../lib/useWorkspaceSearch';
 import { SearchResultsDropdown } from '../SearchResultsDropdown';
 
 interface Props {
   open: boolean;
-  // children removed – unused
+  query: string;
 }
 
 /**
  * Detached rounded card that will contain search results.
  * Currently empty; appears below the search bar when `open` is true.
  */
-export default function SearchDropdown({ open }: Props) {
-  const [query, setQuery] = useState('');
+export default function SearchDropdown({ open, query }: Props) {
   const root = useWorkspaceRoot();
-  const { results, loading } = useWorkspaceSearch(root ?? '', query);
+  const trimmed = useMemo(() => query.trim(), [query]);
+  const { results, loading } = useWorkspaceSearch(root ?? '', trimmed);
+  const [collapsed, setCollapsed] = useState(true);
+
+  if (!query && !collapsed) setCollapsed(true);
 
   if (!open) return null;
 
@@ -28,22 +31,18 @@ export default function SearchDropdown({ open }: Props) {
   }
 
   return (
-    <div className="relative">
-      <input
-        /* eslint-disable-next-line jsx-a11y/no-autofocus */
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search files…"
-        className="w-full rounded border border-neutral-600 bg-neutral-800/50 px-3 py-1 text-sm text-neutral-200 placeholder-neutral-500 focus:outline-none"
-      />
-      <SearchResultsDropdown
-        results={results}
-        loading={loading}
-        onSelect={(path) => {
-          console.log('selected path', path);
-          // TODO: open file in editor pane
-        }}
-      />
-    </div>
+    <SearchResultsDropdown
+      results={results}
+      loading={loading}
+      collapsed={collapsed}
+      onExpand={(e?: React.MouseEvent) => {
+        e?.preventDefault();
+        e?.stopPropagation();
+        setCollapsed(false);
+      }}
+      onSelect={() => {
+        /* no-op until file open implemented */
+      }}
+    />
   );
 }

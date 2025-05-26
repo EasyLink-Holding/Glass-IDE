@@ -13,7 +13,8 @@ const MagnifyingGlass = memoIcon(MagnifyingGlassIcon);
  */
 export default function SearchBar() {
   const [open, setOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState('');
+  const containerRef = useRef<HTMLDivElement>(null);
   const root = useWorkspaceRoot();
 
   return (
@@ -21,6 +22,7 @@ export default function SearchBar() {
       className="relative w-full max-w-xs md:max-w-sm lg:max-w-md"
       data-no-drag
       onMouseEnter={() => root && preloadSearch(root)}
+      ref={containerRef}
     >
       <label
         htmlFor="search-input"
@@ -29,8 +31,11 @@ export default function SearchBar() {
         <MagnifyingGlass size={16} weight="regular" className="text-neutral-400" />
         <input
           id="search-input"
-          ref={inputRef}
           type="text"
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value);
+          }}
           placeholder="Search your project"
           className="w-full bg-transparent text-sm text-neutral-200 placeholder-neutral-400 focus:outline-none"
           onFocus={() => {
@@ -38,14 +43,14 @@ export default function SearchBar() {
             setOpen(true);
           }}
           onBlur={(e) => {
-            // Close dropdown if focus leaves the container
-            if (!e.currentTarget.parentElement?.contains(e.relatedTarget as Node)) {
+            const next = e.relatedTarget as Node | null;
+            if (!containerRef.current?.contains(next)) {
               setOpen(false);
             }
           }}
         />
       </label>
-      <SearchDropdown open={open} />
+      <SearchDropdown key={`${open}-${query}`} open={open} query={query} />
     </div>
   );
 }

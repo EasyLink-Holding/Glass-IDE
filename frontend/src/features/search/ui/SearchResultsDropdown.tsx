@@ -5,18 +5,30 @@ interface Props {
   results: string[];
   onSelect: (path: string) => void;
   loading?: boolean;
+  collapsed?: boolean;
+  showCount?: number;
+  onExpand?: () => void;
 }
 
-function SearchResultsDropdownInner({ results, onSelect, loading }: Props) {
+function SearchResultsDropdownInner({
+  results,
+  onSelect,
+  loading,
+  collapsed = false,
+  showCount = 5,
+  onExpand,
+}: Props) {
   if (!results.length && !loading) return null;
-  const items = loading ? Array.from({ length: 8 }, (_, i) => `loading-${i}`) : results;
+  const displayResults = collapsed ? results.slice(0, showCount) : results;
+  const items = loading ? Array.from({ length: 8 }, (_, i) => `loading-${i}`) : displayResults;
+  const height = collapsed ? items.length * 28 : 300;
 
   return (
-    <div className="absolute left-0 right-0 top-full mt-2 max-h-96 rounded-lg border border-neutral-600 bg-neutral-800/90 shadow-lg backdrop-blur">
+    <div className="absolute left-0 right-0 top-full mt-2 rounded-lg border border-neutral-600 bg-neutral-800/90 shadow-lg backdrop-blur">
       <VirtualList
         items={items}
         itemSize={28}
-        height={300}
+        height={height}
         render={(item: string) => (
           <button
             type="button"
@@ -32,6 +44,16 @@ function SearchResultsDropdownInner({ results, onSelect, loading }: Props) {
           </button>
         )}
       />
+      {collapsed && !loading && results.length > showCount && (
+        <button
+          type="button"
+          onClick={onExpand}
+          onMouseDown={(e) => e.preventDefault()}
+          className="block w-full border-t border-neutral-600 bg-neutral-800/80 px-3 py-1 text-center text-xs uppercase tracking-wide text-neutral-300 hover:bg-neutral-700/60"
+        >
+          See more…
+        </button>
+      )}
     </div>
   );
 }

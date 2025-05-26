@@ -43,12 +43,7 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
 
   useEffect(() => {
     let cancelled = false;
-    if (!debouncedQuery) {
-      setResults([]);
-      return () => {
-        /* noop */
-      };
-    }
+    if (!rootPath) return () => {};
 
     setLoading(true);
     void batchedInvoke<string[]>('query_index', { path: rootPath, query: debouncedQuery })

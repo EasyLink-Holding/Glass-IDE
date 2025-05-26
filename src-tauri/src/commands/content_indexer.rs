@@ -10,7 +10,7 @@
 use anyhow::Error as AnyError;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};

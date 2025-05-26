@@ -34,6 +34,12 @@ tauri-plugin-dialog = "2"
 rayon = "1.10"
 fuzzy-matcher = "0.3"
 rocksdb = "0.22"
+# --- new for LSP gateway ---
+# Async runtime & process management
+tokio = { version = "1.37", features = ["rt-multi-thread", "macros", "process", "io-util", "time"] }
+# We embed our own mini LSP proxy – tower-lsp provides types and helpers.
+# Use default features (runtime-tokio) so codec traits are available.
+tower-lsp = "0.20"
 
 [profile.release]
 lto = "thin"

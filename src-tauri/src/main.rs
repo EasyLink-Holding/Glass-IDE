@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod lsp;
 mod menu;
 
 use tauri::Manager;
@@ -20,6 +21,8 @@ fn main() {
             // Content indexer
             commands::content_indexer::build_content_index,
             commands::content_indexer::query_content_index,
+            // ---------------- LSP ----------------
+            lsp::invoke_lsp,
         ])
         .setup(|app| {
             #[cfg_attr(

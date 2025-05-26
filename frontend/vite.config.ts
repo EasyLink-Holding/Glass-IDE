@@ -26,6 +26,12 @@ import PurgeIcons from 'vite-plugin-purge-icons';
 // -----------------------------------------------------------------------------
 
 export default defineConfig({
+  // Ensure web workers are bundled as ES modules; Rollup disallows IIFE when
+  // code-splitting is enabled (our default). This fixes the build error coming
+  // from workerPool.ts.
+  worker: {
+    format: 'es',
+  },
   plugins: [
     monacoEditorPlugin({
       languageWorkers: ['editorWorkerService', 'css', 'html', 'json', 'typescript'],

@@ -1,7 +1,9 @@
 import Editor from '@monaco-editor/react';
 import { useEffect } from 'react';
+import { setupLspBridge } from '../../lib/lsp/bridge';
 import { LARGE_FILE_THRESHOLD, ensureLanguage } from '../../lib/monaco/loader';
 import { type VirtualDocument, createVirtualDocument } from '../../lib/monaco/virtualDocument';
+import { useWorkspaceRoot } from '../../lib/workspace/workspaceStore';
 
 export interface CodeEditorProps {
   language?: string;
@@ -16,6 +18,8 @@ export default function CodeEditor({
   language = 'typescript',
   initialCode = '// Start coding…',
 }: CodeEditorProps) {
+  const root = useWorkspaceRoot();
+
   // Lazy-load language support on mount
   useEffect(() => {
     void ensureLanguage(language);
@@ -40,6 +44,9 @@ export default function CodeEditor({
       }}
       onMount={(editor) => {
         virtualDoc?.attachEditor(editor);
+        if (root) {
+          void setupLspBridge(root, language);
+        }
       }}
       {...modelProps}
     />

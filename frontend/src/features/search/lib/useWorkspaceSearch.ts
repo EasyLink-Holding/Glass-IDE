@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { batchedInvoke } from '../../../lib/tauri/batchedCommunication';
+import { runTask } from '../../../workers/pool/workerPool';
 
 // Small debounce helper – waits `delay` ms after the last call before firing
 function useDebouncedValue<T>(value: T, delay = 120): T {
@@ -47,8 +48,14 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
 
     setLoading(true);
     void batchedInvoke<string[]>('query_index', { path: rootPath, query: debouncedQuery })
-      .then((r) => {
-        if (!cancelled) setResults(r);
+      .then(async (raw) => {
+        // Offload heavy scoring/filtering to worker pool
+        const scored = await runTask<string[]>('fuzzySearch', {
+          items: raw,
+          query: debouncedQuery,
+          limit: 100,
+        });
+        if (!cancelled) setResults(scored);
       })
       .catch((err) => console.error('query_index failed', err))
       .finally(() => {

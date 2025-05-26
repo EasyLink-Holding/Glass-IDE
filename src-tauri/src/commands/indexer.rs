@@ -14,6 +14,7 @@
 use anyhow::Error as AnyError;
 use dirs_next::cache_dir;
 use once_cell::sync::Lazy;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -97,19 +98,24 @@ fn ensure_index<'a>(
         }
     }
 
-    // Slow path: build new index
-    let mut paths = Vec::new();
-    for entry in WalkDir::new(root)
+    // Slow path: build new index – collect all file paths in parallel
+    let paths: Vec<String> = WalkDir::new(root)
         .into_iter()
         .filter_entry(|e| !is_hidden(e))
+        .par_bridge()
         .filter_map(Result::ok)
-    {
-        if entry.file_type().is_file() {
-            if let Ok(rel) = entry.path().strip_prefix(root) {
-                paths.push(rel.to_string_lossy().to_string());
+        .filter_map(|entry| {
+            if entry.file_type().is_file() {
+                entry
+                    .path()
+                    .strip_prefix(root)
+                    .ok()
+                    .map(|rel| rel.to_string_lossy().to_string())
+            } else {
+                None
             }
-        }
-    }
+        })
+        .collect();
 
     // Snapshot to disk (ignore errors)
     if let Some(cache_path) = cache_file_for_root(root) {

@@ -1,4 +1,4 @@
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
 import { VirtualList } from '../../../components/ui/virtual/VirtualList';
 
 interface Props {
@@ -19,8 +19,12 @@ function SearchResultsDropdownInner({
   onExpand,
 }: Props) {
   if (!results.length && !loading) return null;
-  const displayResults = collapsed ? results.slice(0, showCount) : results;
-  const items = loading ? Array.from({ length: 8 }, (_, i) => `loading-${i}`) : displayResults;
+  // Memo to avoid recomputing slices on each render if inputs unchanged
+  const displayResults = useCallback(
+    () => (collapsed ? results.slice(0, showCount) : results),
+    [results, collapsed, showCount]
+  );
+  const items = loading ? Array.from({ length: 8 }, (_, i) => `loading-${i}`) : displayResults();
   const height = collapsed ? items.length * 28 : 300;
 
   return (

@@ -1,4 +1,4 @@
-import react from '@vitejs/plugin-react-swc';
+import preact from '@preact/preset-vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import checker from 'vite-plugin-checker';
@@ -15,7 +15,7 @@ import PurgeIcons from 'vite-plugin-purge-icons';
 
 export default defineConfig({
   plugins: [
-    react(),
+    preact(),
     // Enables out-of-the-box vendor chunk splitting
     splitVendorChunkPlugin(),
     // Removes unused Phosphor icons (tree-shaking for icon sets)
@@ -35,9 +35,14 @@ export default defineConfig({
         // Custom manual chunk rules to isolate heavy deps
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         manualChunks(id: string): string | undefined {
-          // Group search UI into its own chunk for preloading
+          // Feature-based groups – tweak for better cacheability & preload strategies
+          if (id.includes('/app/editor/')) return 'editor';
+          if (id.includes('/app/versionControl/')) return 'vcs';
+          if (id.includes('/app/marketplace/')) return 'marketplace';
+          if (id.includes('/app/teams/') || id.includes('/app/organization/')) return 'teams';
           if (id.includes('/features/search/')) return 'search';
 
+          // Vendor libraries
           if (id.includes('node_modules')) {
             if (id.includes('monaco-editor')) return 'monaco';
             if (id.includes('phosphor-react')) return 'phosphor';

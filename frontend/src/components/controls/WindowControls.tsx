@@ -1,6 +1,8 @@
-import { getCurrentWindow } from '@tauri-apps/api/window';
 import { memo, useEffect, useState } from 'react';
 import { useAppearanceStore } from '../../lib/settings/appearanceStore';
+
+// Defer tauri window API until runtime to avoid inlining heavy helpers.
+import type { Window as TauriWindow } from '@tauri-apps/api/window';
 
 /*
  * macOS traffic-light spec (NSWindow):
@@ -23,23 +25,23 @@ const btnBase = [
 function WindowControls() {
   const hide = useAppearanceStore((state) => state.hideSystemControls);
   // Track window API state
-  const [windowInstance, setWindowInstance] = useState<ReturnType<typeof getCurrentWindow> | null>(
-    null
-  );
+  const [windowInstance, setWindowInstance] = useState<TauriWindow | null>(null);
   const [isApiReady, setIsApiReady] = useState(false);
 
   // Initialize window API after component mounts
   useEffect(() => {
     // Safely initialize window API
-    try {
-      const win = getCurrentWindow();
-      setWindowInstance(win);
-      setIsApiReady(true);
-    } catch (error) {
-      console.error('[WindowControls] Failed to initialize window API:', error);
-      setIsApiReady(false);
-    }
-
+    (async () => {
+      try {
+        const { getCurrentWindow } = await import('@tauri-apps/api/window');
+        const win = getCurrentWindow();
+        setWindowInstance(win as TauriWindow);
+        setIsApiReady(true);
+      } catch (error) {
+        console.error('[WindowControls] Failed to initialize window API:', error);
+        setIsApiReady(false);
+      }
+    })();
     // Cleanup function not needed as this is initialization only
   }, []);
 

@@ -1,4 +1,3 @@
-import { listen } from '@tauri-apps/api/event';
 import { useEffect } from 'react';
 import { create } from 'zustand';
 import { batchedInvoke } from '../lib/tauri/batchedCommunication';
@@ -161,10 +160,18 @@ export function useLoadIncFileTree(root: string) {
 
 // -------------- fs watcher debounce --------------
 let listenerAttached = false;
-function attachFsListener() {
+let listenEvent: typeof import('@tauri-apps/api/event')['listen'] | undefined;
+async function attachFsListener() {
   if (listenerAttached) return;
   listenerAttached = true;
-  listen<FsChange>('fs:change', () => {
+  // Dynamically load Tauri event API to defer heavy ipc helpers until a workspace
+  if (!listenEvent) {
+    const mod = await import('@tauri-apps/api/event');
+    listenEvent = mod.listen;
+  }
+
+  // Use optional call to satisfy Biome no-non-null lint rule
+  listenEvent?.<FsChange>('fs:change', () => {
     const store = useIncFileTreeStore;
     const REFRESH_DELAY = 200;
     const prevTimer = (attachFsListener as unknown as { timer?: NodeJS.Timeout }).timer;

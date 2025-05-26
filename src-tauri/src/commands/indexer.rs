@@ -139,7 +139,7 @@ pub async fn build_index(path: String) -> tauri::Result<usize> {
         return Ok(0);
     }
     let mut indices = INDICES.lock().unwrap();
-    let idx = ensure_index(&mut indices, &root).map_err(AnyError::from)?;
+    let idx = ensure_index(&mut indices, &root)?;
     Ok(idx.paths.len())
 }
 
@@ -152,7 +152,7 @@ pub async fn query_index(path: String, query: String) -> tauri::Result<Vec<Strin
         return Ok(Vec::new());
     }
     let mut indices = INDICES.lock().unwrap();
-    let idx = ensure_index(&mut indices, &root).map_err(AnyError::from)?;
+    let idx = ensure_index(&mut indices, &root)?;
 
     let q_lower = query.to_lowercase();
     let mut results: Vec<&String> = idx

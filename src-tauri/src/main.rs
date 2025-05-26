@@ -9,9 +9,8 @@ use tauri::Manager;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
-        // Expose dynamic batch command handler
+        // Register individual command handlers
         .invoke_handler(tauri::generate_handler![
-            commands::batch_commands,
             commands::fs::read_dir_snapshot,
             commands::fs::read_dir_children,
             commands::fs::start_fs_watch,

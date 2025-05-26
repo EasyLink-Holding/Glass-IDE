@@ -43,12 +43,16 @@ export const useIncFileTreeStore = create<FileTreeState>((set, get) => ({
   loadingDirs: {},
 
   async loadRoot(root: string, depth: number = INITIAL_DEPTH) {
-    set({ root });
-    // Load initial shallow snapshot
-    const nodes = await batchedInvoke<FsNode[]>('read_dir_snapshot', { path: root, depth });
-    set({ nodes });
-    // Start watcher fire-and-forget
-    void batchedInvoke('start_fs_watch', { path: root });
+    try {
+      set({ root });
+      // Load initial shallow snapshot
+      const nodes = await batchedInvoke<FsNode[]>('read_dir_snapshot', { path: root, depth });
+      set({ nodes });
+      // Start watcher fire-and-forget
+      void batchedInvoke('start_fs_watch', { path: root });
+    } catch (err) {
+      console.error('[IncFileTree] loadRoot failed', err);
+    }
   },
 
   async toggleDir(id: string) {
@@ -69,8 +73,15 @@ export const useIncFileTreeStore = create<FileTreeState>((set, get) => ({
     // Mark loading
     set({ loadingDirs: { ...state.loadingDirs, [id]: true } });
 
-    // Fetch immediate children
-    const children = await batchedInvoke<FsNode[]>('read_dir_children', { path: id });
+    let children: FsNode[] = [];
+    try {
+      // Fetch immediate children
+      children = await batchedInvoke<FsNode[]>('read_dir_children', { path: id });
+    } catch (err) {
+      console.error('[IncFileTree] read_dir_children failed', err);
+      set({ loadingDirs: { ...state.loadingDirs, [id]: false } });
+      return;
+    }
 
     // Re-read current state inside async closure
     const current = get();

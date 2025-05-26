@@ -5,28 +5,29 @@ export interface TreeNode {
   id: string;
   name: string;
   depth: number; // 0 = root, 1 = child, etc.
+  /** Optional fs kind – file or dir */
+  kind?: 'file' | 'dir';
 }
 
 interface VirtualTreeProps {
   nodes: TreeNode[];
+  /** Optional custom row renderer */
+  render?: (node: TreeNode, index: number) => React.ReactNode;
 }
 
 /** Simple virtualised tree that indents rows based on depth. */
-function VirtualTreeInner({ nodes }: VirtualTreeProps) {
-  return (
-    <VirtualList
-      items={nodes}
-      itemSize={22}
-      render={(node) => (
-        <div
-          className="whitespace-nowrap text-neutral-200 hover:bg-neutral-700/40 px-2"
-          style={{ paddingLeft: node.depth * 12 }}
-        >
-          {node.name}
-        </div>
-      )}
-    />
+function VirtualTreeInner({ nodes, render }: VirtualTreeProps) {
+  // Default renderer mirrors the old behaviour
+  const defaultRender = (node: TreeNode) => (
+    <div
+      className="whitespace-nowrap text-neutral-200 hover:bg-neutral-700/40 px-2"
+      style={{ paddingLeft: node.depth * 12 }}
+    >
+      {node.name}
+    </div>
   );
+
+  return <VirtualList items={nodes} itemSize={22} render={render ?? defaultRender} />;
 }
 
 export const VirtualTree = memo(VirtualTreeInner);

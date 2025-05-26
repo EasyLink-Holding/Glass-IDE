@@ -11,7 +11,6 @@ import { core } from '@tauri-apps/api';
 import { emit, listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { runTask } from '../../workers/pool/workerPool';
-import * as codec from './codecWorkerClient';
 
 // Batch window for collecting commands (milliseconds)
 const BATCH_WINDOW = 25;
@@ -175,29 +174,12 @@ export function stopCacheCleanup(): void {
 // Start the cache cleanup by default
 startCacheCleanup();
 
-// -----------------------------------------------------------------------------
-// Optional binary invoke path – enabled by default.
-// -----------------------------------------------------------------------------
-const USE_BINARY = true;
-
+// -------------------------------
+// Simple JSON invoke wrapper
+// -------------------------------
 async function invokeSmart<T>(command: string, args: Record<string, unknown>): Promise<T> {
-  if (!USE_BINARY) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return core.invoke<T>(command, args);
-  }
-
-  // Encode via MessagePack & send base64 – backend must decode.
-  const packed = await codec.encode(args);
-  const base64 = btoa(String.fromCharCode(...packed));
-  const resultBase64 = await core.invoke<string>(command, { _bin: base64 } as Record<
-    string,
-    unknown
-  >);
-  // Decode back
-  const raw = atob(resultBase64)
-    .split('')
-    .map((c) => c.charCodeAt(0));
-  return await codec.decode<T>(Uint8Array.from(raw));
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return core.invoke<T>(command, args);
 }
 
 /**
@@ -227,16 +209,10 @@ export async function batchCommands<T>(
     return [result];
   }
 
-  // Create a batch of commands
-  const batch = {
-    commands: commands.map(({ command, args }) => ({
-      command,
-      args: args || {},
-    })),
-  };
-
-  // Execute the batch
-  const results = await invokeSmart<T[]>('batch_commands', { batch });
+  // Execute all commands in parallel
+  const results = (await Promise.all(
+    commands.map(({ command, args }) => invokeSmart<T>(command, args))
+  )) as T[];
 
   // Cache individual results (need sequential await)
   for (let i = 0; i < commands.length; i += 1) {

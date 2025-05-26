@@ -49,13 +49,8 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
     setLoading(true);
     void batchedInvoke<string[]>('query_index', { path: rootPath, query: debouncedQuery })
       .then(async (raw) => {
-        // Offload heavy scoring/filtering to worker pool
-        const scored = await runTask<string[]>('fuzzySearch', {
-          items: raw,
-          query: debouncedQuery,
-          limit: 100,
-        });
-        if (!cancelled) setResults(scored);
+        // Results are already scored on backend – no need for extra worker fuzzy search
+        if (!cancelled) setResults(raw);
       })
       .catch((err) => console.error('query_index failed', err))
       .finally(() => {

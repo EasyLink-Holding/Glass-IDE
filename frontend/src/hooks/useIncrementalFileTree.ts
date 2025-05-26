@@ -30,6 +30,8 @@ interface FileTreeState {
   toggleDir: (id: string) => void;
   /** Refresh entire tree (e.g. on fs watcher) */
   refresh: () => void;
+  /** Incremental apply based on fs watcher event */
+  applyFsChange: (change: FsChange) => void;
 }
 
 const INITIAL_DEPTH = 2; // depth for first snapshot – keeps first paint snappy
@@ -113,6 +115,62 @@ export const useIncFileTreeStore = create<FileTreeState>((set, get) => ({
     });
     set({ nodes });
   },
+
+  /** Apply incremental fs change */
+  async applyFsChange(change: FsChange) {
+    const state = get();
+
+    // Helper to get parent dir path quickly
+    const parentDir = (p: string) => {
+      const pos = Math.max(p.lastIndexOf('/'), p.lastIndexOf('\\'));
+      return pos === -1 ? state.root : p.slice(0, pos);
+    };
+
+    // Handle removals synchronously – cheap array filter
+    if (change.kind.includes('Remove')) {
+      const toRemove = new Set(change.paths);
+      // Remove both the node and any nested children
+      const newNodes = state.nodes.filter(
+        (n) => !Array.from(toRemove).some((r) => n.id === r || n.id.startsWith(`${r}/`))
+      );
+      if (newNodes.length !== state.nodes.length) {
+        set({ nodes: newNodes });
+      }
+    }
+
+    // Handle additions / modifications – refresh parent dir listing if it’s already loaded
+    if (change.kind.includes('Create') || change.kind.includes('Modify')) {
+      // Unique parent directories
+      const parents = Array.from(new Set(change.paths.map(parentDir)));
+      await Promise.all(
+        parents.map(async (dir) => {
+          if (!state.loaded[dir]) return;
+          try {
+            const children = await batchedInvoke<FsNode[]>('read_dir_children', { path: dir });
+            const current = get();
+            const parentIndex = current.nodes.findIndex((n) => n.id === dir);
+            if (parentIndex === -1) return;
+            const parentDepth = current.nodes[parentIndex].depth;
+            const adjusted = children.map((c) => ({ ...c, depth: parentDepth + 1 + c.depth }));
+
+            // Remove old direct children (depth == parentDepth+1)
+            let end = parentIndex + 1;
+            while (end < current.nodes.length && current.nodes[end].depth > parentDepth) {
+              end += 1;
+            }
+            const newNodes = [
+              ...current.nodes.slice(0, parentIndex + 1),
+              ...adjusted,
+              ...current.nodes.slice(end),
+            ];
+            set({ nodes: newNodes, loaded: { ...current.loaded, [dir]: true } });
+          } catch (err) {
+            console.error('[IncFileTree] incremental refresh failed', err);
+          }
+        })
+      );
+    }
+  },
 }));
 
 // -----------------------------
@@ -158,26 +216,20 @@ export function useLoadIncFileTree(root: string) {
   }, [root, loadRoot]);
 }
 
-// -------------- fs watcher debounce --------------
+// -------------- fs watcher --------------
 let listenerAttached = false;
 let listenEvent: typeof import('@tauri-apps/api/event')['listen'] | undefined;
 async function attachFsListener() {
   if (listenerAttached) return;
   listenerAttached = true;
-  // Dynamically load Tauri event API to defer heavy ipc helpers until a workspace
   if (!listenEvent) {
     const mod = await import('@tauri-apps/api/event');
     listenEvent = mod.listen;
   }
 
-  // Use optional call to satisfy Biome no-non-null lint rule
-  listenEvent?.<FsChange>('fs:change', () => {
-    const store = useIncFileTreeStore;
-    const REFRESH_DELAY = 200;
-    const prevTimer = (attachFsListener as unknown as { timer?: NodeJS.Timeout }).timer;
-    if (prevTimer) clearTimeout(prevTimer);
-    (attachFsListener as unknown as { timer?: NodeJS.Timeout }).timer = setTimeout(() => {
-      store.getState().refresh();
-    }, REFRESH_DELAY);
+  // Listen for granular fs change payloads and apply incrementally
+  listenEvent?.<FsChange>('fs:change', (event) => {
+    const payload = event.payload as FsChange;
+    useIncFileTreeStore.getState().applyFsChange(payload);
   }).catch((err) => console.error('fs:change listener failed', err));
 }

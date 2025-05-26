@@ -8,9 +8,9 @@ use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
-use std::time::SystemTime;
+use std::time::{Duration, SystemTime};
 use tauri::{Emitter, Manager, Runtime, Window};
 use walkdir::{DirEntry, WalkDir};
 use xxhash_rust::xxh3::xxh3_64;
@@ -170,6 +170,24 @@ pub async fn read_dir_children(path: String) -> tauri::Result<Vec<FsNode>> {
     Ok(nodes)
 }
 
+// Directories we don’t care about high-frequency events for – they generate a lot
+// of noise (.git, node_modules…) and rarely matter for IDE operations.
+const IGNORED_DIRS: &[&str] = &["node_modules", ".git", "target"];
+
+/// Fast check whether a path lives inside an ignored directory.
+fn should_ignore(path: &Path) -> bool {
+    for comp in path.components() {
+        if let Component::Normal(os) = comp {
+            if let Some(s) = os.to_str() {
+                if IGNORED_DIRS.contains(&s) {
+                    return true;
+                }
+            }
+        }
+    }
+    false
+}
+
 // -----------------------------
 // File-system watcher
 // -----------------------------
@@ -183,30 +201,69 @@ pub async fn start_fs_watch<R: Runtime>(window: Window<R>, path: String) -> taur
         return Ok(());
     }
 
-    // Closure to emit events
-    let app_handle = window.app_handle().clone();
-    let emit_change = move |paths: Vec<PathBuf>, kind: String| {
-        let payload = FsChange {
-            paths: paths
+    // Clone app handle once – clone again per closure to satisfy ownership
+    let app_handle_main = window.app_handle().clone();
+
+    // build watcher – prefer native platform watcher; fall back to poll watcher w/ low frequency
+    let app_handle_cb = app_handle_main.clone();
+    let callback = move |res: Result<notify::Event, notify::Error>| {
+        if let Ok(event) = res {
+            // Filter out ignored directories to cut down chatter
+            let filtered: Vec<PathBuf> = event
+                .paths
                 .into_iter()
-                .map(|p| p.to_string_lossy().into_owned())
-                .collect(),
-            kind,
-        };
-        let _ = app_handle.emit("fs:change", payload);
+                .filter(|p| !should_ignore(p))
+                .collect();
+            if filtered.is_empty() {
+                return;
+            }
+            let kind_str = format!("{:?}", event.kind);
+            let payload = FsChange {
+                paths: filtered
+                    .iter()
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .collect(),
+                kind: kind_str,
+            };
+            let _ = app_handle_cb.emit("fs:change", payload);
+        }
     };
 
-    // build watcher
-    let mut watcher: RecommendedWatcher = RecommendedWatcher::new(
-        move |res: Result<notify::Event, notify::Error>| {
-            if let Ok(event) = res {
-                let kind_str = format!("{:?}", event.kind);
-                emit_change(event.paths, kind_str);
-            }
-        },
-        Config::default().with_poll_interval(std::time::Duration::from_millis(100)),
-    )
-    .map_err(AnyError::from)?;
+    // Attempt native watcher first
+    let watcher_res = RecommendedWatcher::new(callback, Config::default());
+    let mut watcher: RecommendedWatcher = match watcher_res {
+        Ok(w) => w,
+        Err(e) => {
+            eprintln!("Native watcher unavailable, falling back to polling: {e}");
+            let app_handle_poll = app_handle_main.clone();
+            let poll_cb = move |res: Result<notify::Event, notify::Error>| {
+                if let Ok(event) = res {
+                    let filtered: Vec<PathBuf> = event
+                        .paths
+                        .into_iter()
+                        .filter(|p| !should_ignore(p))
+                        .collect();
+                    if filtered.is_empty() {
+                        return;
+                    }
+                    let kind_str = format!("{:?}", event.kind);
+                    let payload = FsChange {
+                        paths: filtered
+                            .iter()
+                            .map(|p| p.to_string_lossy().into_owned())
+                            .collect(),
+                        kind: kind_str,
+                    };
+                    let _ = app_handle_poll.emit("fs:change", payload);
+                }
+            };
+            RecommendedWatcher::new(
+                poll_cb,
+                Config::default().with_poll_interval(Duration::from_secs(2)),
+            )
+            .map_err(AnyError::from)?
+        }
+    };
 
     watcher
         .watch(&root, RecursiveMode::Recursive)

@@ -13,6 +13,8 @@
 
 use anyhow::Error as AnyError;
 use dirs_next::cache_dir;
+use fuzzy_matcher::skim::SkimMatcherV2;
+use fuzzy_matcher::FuzzyMatcher;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -160,14 +162,46 @@ pub async fn query_index(path: String, query: String) -> tauri::Result<Vec<Strin
     let mut indices = INDICES.lock().unwrap();
     let idx = ensure_index(&mut indices, &root)?;
 
+    // Early return empty query ⇒ nothing
+    if query.trim().is_empty() {
+        return Ok(Vec::new());
+    }
+
+    let matcher = SkimMatcherV2::default();
     let q_lower = query.to_lowercase();
-    let mut results: Vec<&String> = idx
+
+    // Score paths with fuzzy matcher; add small bonus for common source extensions
+    const EXT_BONUS: i64 = 100;
+    let mut scored: Vec<(&String, i64)> = idx
         .paths
         .iter()
-        .filter(|p| p.to_lowercase().contains(&q_lower))
+        .filter_map(|p| {
+            matcher.fuzzy_match(p, &q_lower).map(|score| {
+                let bonus = if p.ends_with(".rs")
+                    || p.ends_with(".ts")
+                    || p.ends_with(".tsx")
+                    || p.ends_with(".js")
+                {
+                    EXT_BONUS
+                } else {
+                    0
+                };
+                (p, score + bonus)
+            })
+        })
         .collect();
 
-    results.sort_by(|a, b| a.len().cmp(&b.len()).then_with(|| a.cmp(b)));
-    let sliced: Vec<String> = results.into_iter().take(MAX_RESULTS).cloned().collect();
+    // Highest score first, then shorter path, then lexicographic
+    scored.sort_by(|a, b| {
+        b.1.cmp(&a.1)
+            .then_with(|| a.0.len().cmp(&b.0.len()))
+            .then_with(|| a.0.cmp(b.0))
+    });
+
+    let sliced: Vec<String> = scored
+        .into_iter()
+        .take(MAX_RESULTS)
+        .map(|(p, _)| p.clone())
+        .collect();
     Ok(sliced)
 }

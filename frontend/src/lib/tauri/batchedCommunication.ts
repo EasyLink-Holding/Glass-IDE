@@ -27,7 +27,21 @@ interface CacheEntry<T> {
   next?: CacheEntry<T>;
 }
 
-const MAX_CACHE_SIZE = 500;
+// ---------------- Adaptive cache size ----------------
+function getCacheLimit(): number {
+  if (typeof navigator !== 'undefined' && 'deviceMemory' in navigator) {
+    const gb = (navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 4;
+    // ~250 items per GB — tweak as needed
+    return Math.max(200, Math.round(gb * 250));
+  }
+  return 500; // sensible default
+}
+
+let MAX_CACHE_SIZE = getCacheLimit();
+
+export function _setCacheLimitForTests(limit: number) {
+  MAX_CACHE_SIZE = limit;
+}
 
 class LRUCache {
   private map = new Map<string, CacheEntry<unknown>>();
@@ -58,7 +72,12 @@ class LRUCache {
       entry = { key, data, timestamp: Date.now() };
       this.map.set(key, entry);
       this.addToFront(entry);
-      if (this.map.size > MAX_CACHE_SIZE && this.tail) {
+    }
+
+    // Watermark eviction – trim down to 60% of limit when high watermark exceeded
+    if (this.map.size > MAX_CACHE_SIZE) {
+      const target = Math.floor(MAX_CACHE_SIZE * 0.6);
+      while (this.map.size > target && this.tail) {
         this.map.delete(this.tail.key);
         this.remove(this.tail);
       }
@@ -70,6 +89,10 @@ class LRUCache {
     if (!entry) return;
     this.remove(entry);
     this.map.delete(key);
+  }
+
+  public size(): number {
+    return this.map.size;
   }
 
   private moveToFront(entry: CacheEntry<unknown>): void {
@@ -102,6 +125,11 @@ class LRUCache {
 }
 
 const responseCache = new LRUCache();
+
+// Debug helper – returns current size & limit
+export function getCacheStats() {
+  return { size: responseCache.size(), limit: MAX_CACHE_SIZE };
+}
 
 /**
  * Creates a deterministic string representation of an object

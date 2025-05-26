@@ -15,9 +15,9 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
 use std::process::Stdio;
-use tauri::command;
+use tauri::{command, AppHandle};
+use tauri::Emitter;
 use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::process::{ChildStdin, ChildStdout, Command};
 use tokio::sync::Mutex;
@@ -60,13 +60,13 @@ async fn ensure_server(root: &str) -> Result<()> {
         return Ok(());
     }
 
-    let root_path = PathBuf::from(root);
-    if !root_path.exists() {
+    let root_path = root;
+    if !std::path::Path::new(root_path).exists() {
         return Err(anyhow!("Workspace root does not exist"));
     }
 
     // Pick language server binary heuristically: look for Cargo.toml vs. tsconfig.json
-    let is_rust = root_path.join("Cargo.toml").exists();
+    let is_rust = std::path::Path::new(root_path).join("Cargo.toml").exists();
     let (cmd, args): (&str, &[&str]) = if is_rust {
         ("rust-analyzer", &[])
     } else {
@@ -76,7 +76,7 @@ async fn ensure_server(root: &str) -> Result<()> {
 
     let mut child = Command::new(cmd)
         .args(args)
-        .current_dir(root)
+        .current_dir(root_path)
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
@@ -153,7 +153,10 @@ async fn read_rpc(stdout: &mut BufReader<ChildStdout>) -> Result<Value> {
 // ----------------------------------------------------------------------------
 
 #[command]
-pub async fn invoke_lsp(payload: LspInvokeRequest) -> tauri::Result<LspInvokeResponse> {
+pub async fn invoke_lsp(
+    app: AppHandle,
+    payload: LspInvokeRequest,
+) -> tauri::Result<LspInvokeResponse> {
     let root = payload.root.clone();
     ensure_server(&root).await.map_err(tauri::Error::Anyhow)?;
 
@@ -168,11 +171,33 @@ pub async fn invoke_lsp(payload: LspInvokeRequest) -> tauri::Result<LspInvokeRes
         .await
         .map_err(tauri::Error::Anyhow)?;
 
-    // Await response with timeout (5 s)
-    let resp = timeout(Duration::from_secs(5), read_rpc(&mut proc.stdout))
-        .await
-        .map_err(|_| tauri::Error::Anyhow(anyhow!("LSP timeout")))?
-        .map_err(tauri::Error::Anyhow)?;
+    let request_id = payload.request.get("id").cloned();
+
+    // Read messages until we find matching response; forward diagnostics events on the fly.
+    let resp = loop {
+        let msg = timeout(Duration::from_secs(5), read_rpc(&mut proc.stdout))
+            .await
+            .map_err(|_| tauri::Error::Anyhow(anyhow!("LSP timeout")))?
+            .map_err(tauri::Error::Anyhow)?;
+
+        // Publish diagnostics notification
+        if msg.get("method") == Some(&Value::String("textDocument/publishDiagnostics".into())) {
+            if let Some(params) = msg.get("params") {
+                let _ = app.emit("lsp_diagnostics", params.clone());
+            }
+            continue; // keep waiting
+        }
+
+        // Response with id?
+        if let Some(id_val) = &request_id {
+            if msg.get("id") == Some(id_val) {
+                break msg;
+            }
+        } else {
+            // If original request lacked id, return first non-diag message
+            break msg;
+        }
+    };
 
     Ok(LspInvokeResponse { response: resp })
 }

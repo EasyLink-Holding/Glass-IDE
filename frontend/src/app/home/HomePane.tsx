@@ -1,3 +1,9 @@
+import OpenWorkspaceCard from '../../features/home/OpenWorkspaceCard';
+
 export default function HomePane() {
-  return <div className="p-4 text-neutral-200">Welcome to Glass-IDE!</div>;
+  return (
+    <div className="flex h-full w-full items-center justify-center p-4">
+      <OpenWorkspaceCard />
+    </div>
+  );
 }

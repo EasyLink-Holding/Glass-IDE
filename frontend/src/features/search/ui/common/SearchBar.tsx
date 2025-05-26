@@ -2,6 +2,7 @@ import { MagnifyingGlass as MagnifyingGlassIcon } from 'phosphor-react';
 import { useRef, useState } from 'react';
 import { preloadSearch } from '../../../../lib/prefetch/searchPrefetch';
 import { memoIcon } from '../../../../lib/ui/memoIcon';
+import { useWorkspaceRoot } from '../../../../lib/workspace/workspaceStore';
 import SearchDropdown from './SearchBox';
 
 const MagnifyingGlass = memoIcon(MagnifyingGlassIcon);
@@ -13,13 +14,13 @@ const MagnifyingGlass = memoIcon(MagnifyingGlassIcon);
 export default function SearchBar() {
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const root = '.'; // TODO: real workspace root
+  const root = useWorkspaceRoot();
 
   return (
     <div
       className="relative w-full max-w-xs md:max-w-sm lg:max-w-md"
       data-no-drag
-      onMouseEnter={() => preloadSearch(root)}
+      onMouseEnter={() => root && preloadSearch(root)}
     >
       <label
         htmlFor="search-input"
@@ -33,7 +34,7 @@ export default function SearchBar() {
           placeholder="Search your project"
           className="w-full bg-transparent text-sm text-neutral-200 placeholder-neutral-400 focus:outline-none"
           onFocus={() => {
-            preloadSearch(root);
+            if (root) preloadSearch(root);
             setOpen(true);
           }}
           onBlur={(e) => {

@@ -8,6 +8,7 @@ use tauri::Manager;
 
 fn main() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
         // Expose dynamic batch command handler
         .invoke_handler(tauri::generate_handler![
             commands::batch_commands,

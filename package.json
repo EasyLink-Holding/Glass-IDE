@@ -19,6 +19,7 @@
     "@biomejs/biome": "1.9.4"
   },
   "dependencies": {
+    "@tauri-apps/plugin-dialog": "~2",
     "react": "^19.1.0"
   }
 }

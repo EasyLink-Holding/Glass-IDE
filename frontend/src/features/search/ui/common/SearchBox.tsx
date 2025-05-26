@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useWorkspaceRoot } from '../../../../lib/workspace/workspaceStore';
 import { useWorkspaceSearch } from '../../lib/useWorkspaceSearch';
 import { SearchResultsDropdown } from '../SearchResultsDropdown';
 
@@ -13,10 +14,18 @@ interface Props {
  */
 export default function SearchDropdown({ open }: Props) {
   const [query, setQuery] = useState('');
-  const root = '.'; // TODO: wire actual workspace root from settings
-  const { results, loading } = useWorkspaceSearch(root, query);
+  const root = useWorkspaceRoot();
+  const { results, loading } = useWorkspaceSearch(root ?? '', query);
 
   if (!open) return null;
+
+  if (!root) {
+    return (
+      <div className="rounded border border-neutral-700 bg-neutral-800/60 p-4 text-sm text-neutral-400">
+        Open a workspace to enable search.
+      </div>
+    );
+  }
 
   return (
     <div className="relative">

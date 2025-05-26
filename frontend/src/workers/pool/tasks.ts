@@ -165,9 +165,38 @@ export function jsonDiff({ oldObj, newObj }: JsonDiffPayload): Operation[] {
 // Basic line tokenizer – extremely naive fallback used when real language
 // tokenisers are too heavy to load. Runs inside WorkerPool.
 // -----------------------------------------------------------------------------
-interface BasicTokenizeLinePayload {
+interface TokenizeLinePayload {
   lang: string;
   line: string;
+  lineNumber: number;
+}
+
+// Dynamic import of Monarch grammars (basic-languages) when requested.
+// Accepts language id and line; returns scopes array. For now we fallback to
+// our regex tokenizer if Monarch not yet supported.
+type MonarchCache = Record<string, unknown>;
+const monarchGrammars: MonarchCache = {};
+const tokenCache = new Map<string, { startIndex: number; scopes: string }[]>();
+
+async function ensureMonarch(lang: string): Promise<void> {
+  if (monarchGrammars[lang]) return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const mod = await import(`monaco-editor/esm/vs/basic-languages/${lang}/${lang}.contribution`);
+    monarchGrammars[lang] = mod;
+  } catch {
+    monarchGrammars[lang] = null; // mark as unavailable
+  }
+}
+
+// Lazy-loaded Monaco API instance for standalone tokenization inside worker.
+let monacoApiPromise: Promise<typeof import('monaco-editor')> | null = null;
+function getMonacoApi() {
+  if (!monacoApiPromise) {
+    // Import full Monaco API (headless-friendly). Works in worker as it has no DOM deps.
+    monacoApiPromise = import('monaco-editor');
+  }
+  return monacoApiPromise;
 }
 
 /**
@@ -175,12 +204,38 @@ interface BasicTokenizeLinePayload {
  * token type categories. Adequate as colourisation placeholder when heavy
  * tokenisers are not loaded.
  */
-export function basicTokenizeLine({ line }: BasicTokenizeLinePayload): TokenizationResult {
+export async function tokenizeLine({
+  lang,
+  line,
+  lineNumber,
+}: TokenizeLinePayload): Promise<TokenizationResult> {
   const tokens: { startIndex: number; scopes: string }[] = [];
-  for (const t of tokenizeJsLikeLine(line)) {
-    tokens.push({ startIndex: t.startIndex, scopes: kindToScope(t.kind) });
+
+  const cacheKey = `${lang}:${lineNumber}`;
+  const cached = tokenCache.get(cacheKey);
+  if (cached) {
+    return {
+      tokens: cached,
+      endState: { clone: () => ({}) as unknown as monaco.languages.IState, equals: () => true },
+    } as TokenizationResult;
+  }
+
+  await ensureMonarch(lang);
+
+  try {
+    const monacoApi = await getMonacoApi();
+    const monarchTokens = monacoApi.editor.tokenize(line, lang)[0] as unknown as
+      | { startIndex: number; scopes: string }[]
+      | undefined;
+    if (monarchTokens?.length) tokens.push(...monarchTokens);
+  } catch {
+    // Fallback to regex-based tokenizer
+    for (const t of tokenizeJsLikeLine(line)) {
+      tokens.push({ startIndex: t.startIndex, scopes: kindToScope(t.kind) });
+    }
   }
   const dummyState: monaco.languages.IState = { clone: () => dummyState, equals: () => true };
+  tokenCache.set(cacheKey, tokens);
   return { tokens, endState: dummyState } as TokenizationResult;
 }
 
@@ -191,7 +246,7 @@ export const taskRegistry: Record<string, (payload: unknown) => unknown> = {
   heavyFilterSort: (p) => heavyFilterSort(p as HeavyFilterSortPayload),
   mdToHtml: (p) => mdToHtml(p as MdToHtmlPayload),
   jsonDiff: (p) => jsonDiff(p as JsonDiffPayload),
-  basicTokenizeLine: (p) => basicTokenizeLine(p as BasicTokenizeLinePayload),
+  tokenizeLine: (p) => tokenizeLine(p as TokenizeLinePayload),
 };
 
 // Dynamic key union type for tasks

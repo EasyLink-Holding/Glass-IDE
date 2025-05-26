@@ -1,6 +1,7 @@
 import Editor from '@monaco-editor/react';
 import { useEffect } from 'react';
 import { LARGE_FILE_THRESHOLD, ensureLanguage } from '../../lib/monaco/loader';
+import { type VirtualDocument, createVirtualDocument } from '../../lib/monaco/virtualDocument';
 
 export interface CodeEditorProps {
   language?: string;
@@ -20,12 +21,11 @@ export default function CodeEditor({
     void ensureLanguage(language);
   }, [language]);
 
-  // TODO: wire VirtualDocument when initialCode length > threshold
-  const modelProps = {};
+  const modelProps: Record<string, unknown> = {};
+  let virtualDoc: VirtualDocument | undefined;
   if ((initialCode?.length ?? 0) > LARGE_FILE_THRESHOLD) {
-    // placeholder – will hook real VirtualDocument later
-    // eslint-disable-next-line no-console
-    console.info('Large file detected – VirtualDocument stub');
+    virtualDoc = createVirtualDocument(initialCode, language);
+    modelProps.model = virtualDoc.model;
   }
 
   return (
@@ -37,6 +37,9 @@ export default function CodeEditor({
       options={{
         fontSize: 14,
         minimap: { enabled: false },
+      }}
+      onMount={(editor) => {
+        virtualDoc?.attachEditor(editor);
       }}
       {...modelProps}
     />

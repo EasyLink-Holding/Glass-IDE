@@ -48,23 +48,64 @@ export async function ensureLanguage(langId: string): Promise<void> {
 interface TokenizeLinePayload {
   lang: string;
   line: string;
+  lineNumber: number;
 }
 
-const dummyState: monaco.languages.IState = {
-  clone: () => dummyState,
-  equals: () => true,
-};
+class LineState implements monaco.languages.IState {
+  constructor(public lineNumber: number) {}
+  clone(): LineState {
+    return new LineState(this.lineNumber);
+  }
+  equals(other: monaco.languages.IState): boolean {
+    return (other as LineState).lineNumber === this.lineNumber;
+  }
+}
+
+const startState = new LineState(0);
+
+// -----------------------------------------------------------------------------
+// Per-language in-memory token cache. Key: lineNumber (within current model).
+// This resides on the main thread; worker also caches to avoid recomputation.
+// -----------------------------------------------------------------------------
+const tokensCachePerLang: Record<
+  string,
+  Map<number, { startIndex: number; scopes: string }[]>
+> = {};
 
 export function registerWorkerTokenizer(lang: string): void {
   if (monaco.languages.getEncodedLanguageId(lang) === 0) return; // language not registered
 
+  let lineCache = tokensCachePerLang[lang];
+  if (!lineCache) {
+    lineCache = new Map<number, { startIndex: number; scopes: string }[]>();
+    tokensCachePerLang[lang] = lineCache;
+  }
+
   monaco.languages.setTokensProvider(lang, {
-    getInitialState: () => dummyState,
-    tokenize: (line: string): TokenizationResult => {
-      // Fire-and-forget – this keeps UI synchronous. Colourisation applies on
-      // async callback update.
-      runTask<string[]>('basicTokenizeLine', { lang, line } as TokenizeLinePayload).catch(() => []);
-      return { tokens: [], endState: dummyState };
+    getInitialState: () => startState,
+    tokenize: (line: string, state: monaco.languages.IState): TokenizationResult => {
+      const lineNo = (state as LineState).lineNumber;
+      const cached = lineCache.get(lineNo);
+      if (cached) {
+        const nextState = new LineState(lineNo + 1);
+        return { tokens: cached, endState: nextState } as TokenizationResult;
+      }
+      // fire-and-forget worker tokenisation; we rely on cache for future calls
+      runTask<{ tokens: { startIndex: number; scopes: string }[] }>('tokenizeLine', {
+        lang,
+        line,
+        lineNumber: lineNo,
+      } as TokenizeLinePayload)
+        .then((res) => {
+          if (res?.tokens) {
+            lineCache.set(lineNo, res.tokens);
+          }
+        })
+        .catch(() => {
+          /* ignore */
+        });
+      const nextState = new LineState(lineNo + 1);
+      return { tokens: [], endState: nextState };
     },
   });
 }

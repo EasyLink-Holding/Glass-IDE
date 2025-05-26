@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { batchedInvoke } from '../../../lib/tauri/batchedCommunication';
-import { runTask } from '../../../workers/pool/workerPool';
 
 // Small debounce helper – waits `delay` ms after the last call before firing
 function useDebouncedValue<T>(value: T, delay = 120): T {
@@ -15,6 +14,8 @@ function useDebouncedValue<T>(value: T, delay = 120): T {
 interface SearchState {
   results: string[];
   loading: boolean;
+  loadMore: () => void;
+  hasMore: boolean;
 }
 
 /**
@@ -24,8 +25,13 @@ interface SearchState {
  * to reduce IPC chatter.
  */
 export function useWorkspaceSearch(rootPath: string, query: string): SearchState {
+  const PAGE_SIZE = 150;
+
   const [results, setResults] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const pageRef = useRef(0);
+  const requestIdRef = useRef(0);
   const builtRef = useRef(false);
 
   // Kick off index build once.
@@ -42,25 +48,57 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
   // Debounce the query string to avoid rapid IPC calls while typing
   const debouncedQuery = useDebouncedValue(query.trim(), 120);
 
+  const fetchPage = useCallback(
+    async (page: number) => {
+      if (!rootPath) return;
+
+      setLoading(true);
+      const currentId = ++requestIdRef.current;
+
+      try {
+        const raw: string[] = await batchedInvoke('query_index', {
+          path: rootPath,
+          query: debouncedQuery,
+          offset: page * PAGE_SIZE,
+          limit: PAGE_SIZE,
+        });
+
+        // Ignore if a newer request was issued
+        if (currentId !== requestIdRef.current) return;
+
+        if (page === 0) {
+          setResults(raw);
+        } else {
+          setResults((prev) => [...prev, ...raw]);
+        }
+
+        setHasMore(raw.length === PAGE_SIZE);
+      } catch (err) {
+        console.error('query_index failed', err);
+      } finally {
+        if (currentId === requestIdRef.current) setLoading(false);
+      }
+    },
+    [rootPath, debouncedQuery]
+  );
+
+  // Reset + fetch first page when query or root changes
   useEffect(() => {
-    let cancelled = false;
-    if (!rootPath) return () => {};
+    pageRef.current = 0;
+    setResults([]);
+    setHasMore(false);
 
-    setLoading(true);
-    void batchedInvoke<string[]>('query_index', { path: rootPath, query: debouncedQuery })
-      .then(async (raw) => {
-        // Results are already scored on backend – no need for extra worker fuzzy search
-        if (!cancelled) setResults(raw);
-      })
-      .catch((err) => console.error('query_index failed', err))
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    if (!debouncedQuery || !rootPath) return;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [rootPath, debouncedQuery]);
+    fetchPage(0);
+  }, [debouncedQuery, rootPath, fetchPage]);
 
-  return { results, loading };
+  const loadMore = useCallback(() => {
+    if (loading || !hasMore) return;
+    const nextPage = pageRef.current + 1;
+    pageRef.current = nextPage;
+    fetchPage(nextPage);
+  }, [fetchPage, loading, hasMore]);
+
+  return { results, loading, loadMore, hasMore };
 }

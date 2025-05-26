@@ -15,7 +15,7 @@ interface Props {
 export default function SearchDropdown({ open, query }: Props) {
   const root = useWorkspaceRoot();
   const trimmed = useMemo(() => query.trim(), [query]);
-  const { results, loading } = useWorkspaceSearch(root ?? '', trimmed);
+  const { results, loading, loadMore, hasMore } = useWorkspaceSearch(root ?? '', trimmed);
   const [collapsed, setCollapsed] = useState(true);
 
   if (!query && !collapsed) setCollapsed(true);
@@ -34,11 +34,18 @@ export default function SearchDropdown({ open, query }: Props) {
     <SearchResultsDropdown
       results={results}
       loading={loading}
+      hasMore={hasMore}
       collapsed={collapsed}
       onExpand={(e?: React.MouseEvent) => {
         e?.preventDefault();
         e?.stopPropagation();
-        setCollapsed(false);
+
+        // If we were collapsed, first un-collapse; otherwise load next page
+        if (collapsed) {
+          setCollapsed(false);
+        } else {
+          loadMore();
+        }
       }}
       onSelect={() => {
         /* no-op until file open implemented */

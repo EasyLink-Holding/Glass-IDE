@@ -26,7 +26,7 @@ use tauri::command;
 use walkdir::{DirEntry, WalkDir};
 use xxhash_rust::xxh3::xxh3_64;
 
-const MAX_RESULTS: usize = 1000;
+const DEFAULT_PAGE_SIZE: usize = 150;
 
 #[derive(Serialize, Deserialize)]
 struct IndexSnapshot {
@@ -151,10 +151,23 @@ pub async fn build_index(path: String) -> tauri::Result<usize> {
     Ok(idx.paths.len())
 }
 
+#[derive(Deserialize)]
+pub struct QueryParams {
+    path: String,
+    query: String,
+    offset: Option<usize>,
+    limit: Option<usize>,
+}
+
+/// Query the index with pagination.
 #[command]
-/// Query the index of `path` with provided `query` (case-insensitive substring).
-/// Returns up to MAX_RESULTS relative paths.
-pub async fn query_index(path: String, query: String) -> tauri::Result<Vec<String>> {
+pub async fn query_index(params: QueryParams) -> tauri::Result<Vec<String>> {
+    let QueryParams {
+        path,
+        query,
+        offset,
+        limit,
+    } = params;
     let root = PathBuf::from(path);
     if !root.exists() {
         return Ok(Vec::new());
@@ -170,11 +183,10 @@ pub async fn query_index(path: String, query: String) -> tauri::Result<Vec<Strin
     let matcher = SkimMatcherV2::default();
     let q_lower = query.to_lowercase();
 
-    // Score paths with fuzzy matcher; add small bonus for common source extensions
-    const EXT_BONUS: i64 = 100;
+    // Parallel scoring for large corpora
     let mut scored: Vec<(&String, i64)> = idx
         .paths
-        .iter()
+        .par_iter()
         .filter_map(|p| {
             matcher.fuzzy_match(p, &q_lower).map(|score| {
                 let bonus = if p.ends_with(".rs")
@@ -182,7 +194,7 @@ pub async fn query_index(path: String, query: String) -> tauri::Result<Vec<Strin
                     || p.ends_with(".tsx")
                     || p.ends_with(".js")
                 {
-                    EXT_BONUS
+                    100
                 } else {
                     0
                 };
@@ -198,9 +210,13 @@ pub async fn query_index(path: String, query: String) -> tauri::Result<Vec<Strin
             .then_with(|| a.0.cmp(b.0))
     });
 
+    let off = offset.unwrap_or(0);
+    let lim = limit.unwrap_or(DEFAULT_PAGE_SIZE);
+
     let sliced: Vec<String> = scored
         .into_iter()
-        .take(MAX_RESULTS)
+        .skip(off)
+        .take(lim)
         .map(|(p, _)| p.clone())
         .collect();
     Ok(sliced)

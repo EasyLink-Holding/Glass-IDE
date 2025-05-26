@@ -7,7 +7,8 @@ interface Props {
   loading?: boolean;
   collapsed?: boolean;
   showCount?: number;
-  onExpand?: () => void;
+  onExpand?: () => void; // called when user clicks footer button
+  hasMore?: boolean; // more pages available
 }
 
 function SearchResultsDropdownInner({
@@ -17,6 +18,7 @@ function SearchResultsDropdownInner({
   collapsed = false,
   showCount = 5,
   onExpand,
+  hasMore,
 }: Props) {
   if (!results.length && !loading) return null;
   // Memo to avoid recomputing slices on each render if inputs unchanged
@@ -48,14 +50,14 @@ function SearchResultsDropdownInner({
           </button>
         )}
       />
-      {collapsed && !loading && results.length > showCount && (
+      {(collapsed || hasMore) && !loading && (
         <button
           type="button"
           onClick={onExpand}
           onMouseDown={(e) => e.preventDefault()}
           className="block w-full border-t border-neutral-600 bg-neutral-800/80 px-3 py-1 text-center text-xs uppercase tracking-wide text-neutral-300 hover:bg-neutral-700/60"
         >
-          See more…
+          {collapsed ? 'See more…' : 'Load more…'}
         </button>
       )}
     </div>

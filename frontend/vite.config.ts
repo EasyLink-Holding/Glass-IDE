@@ -2,6 +2,18 @@ import preact from '@preact/preset-vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import checker from 'vite-plugin-checker';
+// vite-plugin-monaco-editor is CommonJS; handle `default` interop safely
+import monacoEditorPluginImport from 'vite-plugin-monaco-editor';
+
+type MonacoPluginFn = (
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: Record<string, unknown>
+) => import('vite').Plugin;
+
+const monacoEditorPlugin: MonacoPluginFn =
+  (monacoEditorPluginImport as { default?: MonacoPluginFn }).default ??
+  (monacoEditorPluginImport as unknown as MonacoPluginFn);
+
 import PurgeIcons from 'vite-plugin-purge-icons';
 
 // https://vite.dev/config/
@@ -15,6 +27,9 @@ import PurgeIcons from 'vite-plugin-purge-icons';
 
 export default defineConfig({
   plugins: [
+    monacoEditorPlugin({
+      languageWorkers: ['editorWorkerService', 'css', 'html', 'json', 'typescript'],
+    }),
     preact(),
     // Enables out-of-the-box vendor chunk splitting
     splitVendorChunkPlugin(),

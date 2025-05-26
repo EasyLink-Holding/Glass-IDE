@@ -19,7 +19,10 @@
     "@biomejs/biome": "1.9.4"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
     "@tauri-apps/plugin-dialog": "~2",
-    "react": "^19.1.0"
+    "monaco-editor": "^0.52.2",
+    "react": "^19.1.0",
+    "vite-plugin-monaco-editor": "^1.1.0"
   }
 }

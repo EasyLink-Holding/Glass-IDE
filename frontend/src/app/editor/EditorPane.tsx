@@ -1,3 +1,9 @@
+import CodeEditor from '../../features/editor/CodeEditor';
+
 export default function EditorPane() {
-  return <div className="p-4 text-neutral-200">Editor coming soon…</div>;
+  return (
+    <div className="h-full w-full">
+      <CodeEditor />
+    </div>
+  );
 }

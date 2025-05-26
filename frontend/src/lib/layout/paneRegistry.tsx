@@ -5,9 +5,45 @@ import type { PaneId } from './types';
 
 // Lazy load all panes to improve initial load time and chunk size
 // Each pane will only be fetched when it's actually needed in the UI
-const ChatPane = lazy(() => import('../../app/editor/ChatPane'));
-const ExplorerPane = lazy(() => import('../../app/editor/ExplorerPane'));
-const MainPane = lazy(() => import('../../components/layout/main/MainPane'));
+// Vite magic comments to enforce separate chunks for heavy panes.
+// @vite-ignore ensures proper chunk naming
+const ChatPane = lazy(
+  () => import(/* webpackChunkName: "pane-chat" */ '../../app/editor/ChatPane')
+);
+const ExplorerPane = lazy(
+  () => import(/* webpackChunkName: "pane-explorer" */ '../../app/editor/ExplorerPane')
+);
+const MainPane = lazy(
+  () => import(/* webpackChunkName: "pane-main" */ '../../components/layout/main/MainPane')
+);
+
+// Other panes loaded on-demand
+const DatabasePane = lazy(
+  () => import(/* webpackChunkName: "pane-database" */ '../../app/database/DatabasePane')
+);
+const DocsPane = lazy(() => import(/* webpackChunkName: "pane-docs" */ '../../app/docs/DocsPane'));
+const DeploymentPane = lazy(
+  () => import(/* webpackChunkName: "pane-deployment" */ '../../app/deployment/DeploymentPane')
+);
+const MarketplacePane = lazy(
+  () => import(/* webpackChunkName: "pane-marketplace" */ '../../app/marketplace/MarketplacePane')
+);
+const TeamsPane = lazy(
+  () => import(/* webpackChunkName: "pane-teams" */ '../../app/teams/TeamsPane')
+);
+const OrganizationPane = lazy(
+  () =>
+    import(/* webpackChunkName: "pane-organization" */ '../../app/organization/OrganizationPane')
+);
+const VersionControlPane = lazy(
+  () =>
+    import(
+      /* webpackChunkName: "pane-version-control" */ '../../app/versionControl/VersionControlPane'
+    )
+);
+const SettingsPane = lazy(
+  () => import(/* webpackChunkName: "pane-settings" */ '../../app/settings/SettingsPane')
+);
 
 // Create a wrapper that adds Suspense fallback for all lazy-loaded panes
 const createPaneWithSuspense = (
@@ -38,6 +74,14 @@ export const paneRegistry: Record<PaneId, ComponentType> = {
   explorer: createPaneWithSuspense(ExplorerPane),
   main: createPaneWithSuspense(MainPane),
   chat: createPaneWithSuspense(ChatPane),
+  database: createPaneWithSuspense(DatabasePane),
+  docs: createPaneWithSuspense(DocsPane),
+  deployment: createPaneWithSuspense(DeploymentPane),
+  marketplace: createPaneWithSuspense(MarketplacePane),
+  teams: createPaneWithSuspense(TeamsPane),
+  organization: createPaneWithSuspense(OrganizationPane),
+  versionControl: createPaneWithSuspense(VersionControlPane),
+  settings: createPaneWithSuspense(SettingsPane),
 };
 
 /**

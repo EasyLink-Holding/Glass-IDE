@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { batchedInvoke } from '../../../lib/tauri/batchedCommunication';
+import { runTask } from '../../../workers/pool/workerPool';
 
 // Small debounce helper – waits `delay` ms after the last call before firing
 function useDebouncedValue<T>(value: T, delay = 120): T {
@@ -56,12 +57,25 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
       const currentId = ++requestIdRef.current;
 
       try {
-        const raw: string[] = await batchedInvoke('query_index', {
+        let raw: string[] = await batchedInvoke('query_index', {
           path: rootPath,
           query: debouncedQuery,
           offset: page * PAGE_SIZE,
           limit: PAGE_SIZE,
         });
+
+        // Local fuzzy re-ranking in a background worker for extra snappiness
+        if (debouncedQuery) {
+          try {
+            raw = await runTask<string[]>('fuzzySearch', {
+              items: raw,
+              query: debouncedQuery,
+              limit: PAGE_SIZE,
+            });
+          } catch (err) {
+            console.warn('Worker fuzzySearch failed – falling back to raw order', err);
+          }
+        }
 
         // Ignore if a newer request was issued
         if (currentId !== requestIdRef.current) return;

@@ -3,13 +3,13 @@ export type SplitDir = 'row' | 'col';
 export interface SplitNode {
   type: 'split';
   dir: SplitDir;
-  ratio?: number[]; // flex-grow ratios per child
+  ratio?: number[];
   children: LayoutNode[];
 }
 
 export interface SlotNode {
   type: 'slot';
-  id: string; // unique within template
+  id: string;
 }
 
 export type LayoutNode = SplitNode | SlotNode;
@@ -20,7 +20,19 @@ export interface LayoutTemplate {
   root: LayoutNode;
 }
 
-export type PaneId = 'explorer' | 'main' | 'chat'; // extend later
+// Central list of all built-in panes for compile-time safety.
+export type PaneId =
+  | 'explorer'
+  | 'main'
+  | 'chat'
+  | 'database'
+  | 'docs'
+  | 'deployment'
+  | 'marketplace'
+  | 'teams'
+  | 'organization'
+  | 'versionControl'
+  | 'settings';
 
 export type SpaceId =
   | 'home'

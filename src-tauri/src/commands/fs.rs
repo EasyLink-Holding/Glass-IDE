@@ -7,10 +7,11 @@ use dirs_next::cache_dir;
 use notify::{Config, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Component, Path, PathBuf};
 use std::sync::Mutex;
-use std::time::{Duration, SystemTime};
+use std::time::{Duration, Instant, SystemTime};
 use tauri::{Emitter, Manager, Runtime, Window};
 use walkdir::{DirEntry, WalkDir};
 use xxhash_rust::xxh3::xxh3_64;
@@ -193,6 +194,30 @@ fn should_ignore(path: &Path) -> bool {
 // -----------------------------
 
 static WATCHERS: Lazy<Mutex<Vec<RecommendedWatcher>>> = Lazy::new(|| Mutex::new(Vec::new()));
+// Accumulate events across short window to avoid flooding the frontend.
+static EVENT_ACCUM: Lazy<Mutex<(HashSet<String>, Instant)>> =
+    Lazy::new(|| Mutex::new((HashSet::new(), Instant::now())));
+
+/// Flush accumulated fs paths if the debounce window has elapsed.
+fn flush_changes<R: Runtime>(app: &tauri::AppHandle<R>) {
+    const DEBOUNCE_MS: u128 = 120;
+    let mut guard = EVENT_ACCUM.lock().unwrap();
+    let elapsed = guard.1.elapsed().as_millis();
+    if elapsed < DEBOUNCE_MS {
+        return;
+    }
+    if guard.0.is_empty() {
+        return;
+    }
+    let paths: Vec<String> = guard.0.drain().collect();
+    guard.1 = Instant::now();
+    drop(guard);
+    let payload = FsChange {
+        paths,
+        kind: "Batch".into(),
+    };
+    let _ = app.emit("fs:change", payload);
+}
 
 #[tauri::command]
 pub async fn start_fs_watch<R: Runtime>(window: Window<R>, path: String) -> tauri::Result<()> {
@@ -209,23 +234,26 @@ pub async fn start_fs_watch<R: Runtime>(window: Window<R>, path: String) -> taur
     let callback = move |res: Result<notify::Event, notify::Error>| {
         if let Ok(event) = res {
             // Filter out ignored directories to cut down chatter
-            let filtered: Vec<PathBuf> = event
+            let filtered: Vec<String> = event
                 .paths
                 .into_iter()
                 .filter(|p| !should_ignore(p))
+                .map(|p| p.to_string_lossy().into_owned())
                 .collect();
+
             if filtered.is_empty() {
                 return;
             }
-            let kind_str = format!("{:?}", event.kind);
-            let payload = FsChange {
-                paths: filtered
-                    .iter()
-                    .map(|p| p.to_string_lossy().into_owned())
-                    .collect(),
-                kind: kind_str,
-            };
-            let _ = app_handle_cb.emit("fs:change", payload);
+
+            // Add unique paths to accumulator
+            {
+                let mut guard = EVENT_ACCUM.lock().unwrap();
+                for p in &filtered {
+                    guard.0.insert(p.clone());
+                }
+            }
+
+            flush_changes(&app_handle_cb);
         }
     };
 
@@ -238,23 +266,25 @@ pub async fn start_fs_watch<R: Runtime>(window: Window<R>, path: String) -> taur
             let app_handle_poll = app_handle_main.clone();
             let poll_cb = move |res: Result<notify::Event, notify::Error>| {
                 if let Ok(event) = res {
-                    let filtered: Vec<PathBuf> = event
+                    let filtered: Vec<String> = event
                         .paths
                         .into_iter()
                         .filter(|p| !should_ignore(p))
+                        .map(|p| p.to_string_lossy().into_owned())
                         .collect();
+
                     if filtered.is_empty() {
                         return;
                     }
-                    let kind_str = format!("{:?}", event.kind);
-                    let payload = FsChange {
-                        paths: filtered
-                            .iter()
-                            .map(|p| p.to_string_lossy().into_owned())
-                            .collect(),
-                        kind: kind_str,
-                    };
-                    let _ = app_handle_poll.emit("fs:change", payload);
+
+                    {
+                        let mut guard = EVENT_ACCUM.lock().unwrap();
+                        for p in &filtered {
+                            guard.0.insert(p.clone());
+                        }
+                    }
+
+                    flush_changes(&app_handle_poll);
                 }
             };
             RecommendedWatcher::new(

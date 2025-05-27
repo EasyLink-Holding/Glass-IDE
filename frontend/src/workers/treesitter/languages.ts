@@ -29,7 +29,10 @@ export async function loadLanguage(lang: SupportedLanguage): Promise<Parser.Lang
         return Parser.Language.load(wasmUrl);
       }
       case 'rust': {
-        const wasmUrl = (await import('tree-sitter-rust/tree-sitter-rust.wasm?url'))
+        // Use prebuilt WASM distributed by the VS Code team to avoid missing
+        // file errors during bundling, as the main `tree-sitter-rust` package
+        // does not ship a `tree-sitter-rust.wasm` asset.
+        const wasmUrl = (await import('@vscode/tree-sitter-wasm/wasm/tree-sitter-rust.wasm?url'))
           .default as string;
         return Parser.Language.load(wasmUrl);
       }

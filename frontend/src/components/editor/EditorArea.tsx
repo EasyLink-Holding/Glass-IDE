@@ -27,7 +27,7 @@ function EditorAreaImpl() {
           // Always reflect latest code stored
           initialCode={activeTab.code}
           onChange={(val) => updateCode(activeTab.id, val ?? '')}
-          key={activeTab.id /* force remount when switching files so monaco resets */}
+          /* No key – we keep the editor instance alive and swap models for perf */
         />
       </div>
     </div>

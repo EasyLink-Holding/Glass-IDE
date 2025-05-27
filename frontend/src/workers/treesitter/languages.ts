@@ -19,9 +19,8 @@ export async function loadLanguage(lang: SupportedLanguage): Promise<Parser.Lang
     await Parser.init();
     switch (lang) {
       case 'typescript': {
-        const wasmUrl = (
-          await import('tree-sitter-typescript/tree-sitter-typescript.wasm?url')
-        ).default as string;
+        const wasmUrl = (await import('tree-sitter-typescript/tree-sitter-typescript.wasm?url'))
+          .default as string;
         return Parser.Language.load(wasmUrl);
       }
       case 'tsx': {

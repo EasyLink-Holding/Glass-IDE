@@ -15,6 +15,7 @@ fn main() {
             commands::fs::read_dir_snapshot,
             commands::fs::read_dir_children,
             commands::fs::start_fs_watch,
+            commands::fs::read_file_text,
             // Indexer
             commands::indexer::build_index,
             commands::indexer::query_index,

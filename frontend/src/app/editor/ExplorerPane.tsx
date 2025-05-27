@@ -1,5 +1,6 @@
 import { CaretRight, File as FileIcon } from 'phosphor-react';
 import { useCallback } from 'react';
+import { useTabStore } from '../../components/editor/tabStore';
 /** Left explorer for files/folders */
 import { VirtualTree } from '../../components/ui/virtual/VirtualTree';
 import type { TreeNode } from '../../components/ui/virtual/VirtualTree';
@@ -8,6 +9,7 @@ import {
   useToggleDir,
   useVisibleFileTree,
 } from '../../hooks/useIncrementalFileTree';
+import { batchedInvoke } from '../../lib/tauri/batchedCommunication';
 import { memoIcon } from '../../lib/ui/memoIcon';
 import { useWorkspaceRoot } from '../../lib/workspace/workspaceStore';
 
@@ -30,6 +32,39 @@ export default function ExplorerPane() {
 
   const nodes = useVisibleFileTree();
   const toggleDir = useToggleDir();
+  const openTab = useTabStore((s) => s.openTab);
+
+  const openFile = useCallback(
+    async (node: TreeNode) => {
+      if (node.kind !== 'file') return;
+
+      // Infer language from extension
+      const ext = node.name.split('.').pop()?.toLowerCase() ?? '';
+      const langMap: Record<string, string> = {
+        ts: 'typescript',
+        tsx: 'typescript',
+        js: 'javascript',
+        jsx: 'javascript',
+        json: 'json',
+        rs: 'rust',
+        css: 'css',
+        html: 'html',
+        md: 'markdown',
+        markdown: 'markdown',
+      };
+      const language = langMap[ext] ?? 'plaintext';
+
+      let code = '';
+      try {
+        code = await batchedInvoke<string>('read_file_text', { path: node.id });
+      } catch (err) {
+        console.error('[ExplorerPane] Failed to read file', err);
+      }
+
+      openTab({ id: node.id, name: node.name, language, code });
+    },
+    [openTab]
+  );
 
   // Stable renderer to avoid re-creating function every render and reduce
   // unnecessary VirtualList re-renders.
@@ -63,18 +98,39 @@ export default function ExplorerPane() {
         </span>
       );
 
+      if (isDir) {
+        return (
+          <div
+            key={node.id}
+            className="flex items-center whitespace-nowrap text-neutral-200 hover:bg-neutral-700/40 px-1"
+            style={indent}
+          >
+            {icon}
+            <span className="ml-1 select-none overflow-hidden text-ellipsis">{node.name}</span>
+          </div>
+        );
+      }
+
       return (
-        <div
+        <button
           key={node.id}
-          className="flex items-center whitespace-nowrap text-neutral-200 hover:bg-neutral-700/40 px-1"
+          type="button"
+          className="flex w-full items-center whitespace-nowrap text-left text-neutral-200 hover:bg-neutral-700/40 px-1 bg-transparent border-none outline-none"
           style={indent}
+          onClick={() => openFile(node)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              openFile(node);
+            }
+          }}
         >
           {icon}
           <span className="ml-1 select-none overflow-hidden text-ellipsis">{node.name}</span>
-        </div>
+        </button>
       );
     },
-    [toggleDir]
+    [toggleDir, openFile]
   );
 
   return (

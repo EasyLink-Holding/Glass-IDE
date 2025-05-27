@@ -15,6 +15,7 @@ interface TabStore {
   closeTab: (id: string) => void;
   setActiveTab: (id: string) => void;
   updateTabCode: (id: string, code: string) => void;
+  resetTabs: () => void;
 }
 
 /**
@@ -22,16 +23,9 @@ interface TabStore {
  * For now all data is kept in-memory; file I/O will integrate later.
  */
 export const useTabStore = create<TabStore>((set, get) => ({
-  // Seed with one untitled tab so the editor always has content
-  tabs: [
-    {
-      id: 'untitled-1',
-      name: 'Untitled',
-      language: 'typescript',
-      code: '',
-    },
-  ],
-  activeTabId: 'untitled-1',
+  // Start with no tabs; they will be created when the user opens a file
+  tabs: [],
+  activeTabId: null,
 
   openTab: (tab) => {
     const { tabs } = get();
@@ -79,4 +73,5 @@ export const useTabStore = create<TabStore>((set, get) => ({
       tabs: state.tabs.map((t) => (t.id === id ? { ...t, code } : t)),
     }));
   },
+  resetTabs: () => set({ tabs: [], activeTabId: null }),
 }));

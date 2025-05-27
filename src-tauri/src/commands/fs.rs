@@ -171,6 +171,15 @@ pub async fn read_dir_children(path: String) -> tauri::Result<Vec<FsNode>> {
     Ok(nodes)
 }
 
+#[tauri::command]
+/// Read the entire file as UTF-8 text and return it to the frontend.
+/// Frontend should handle large files carefully – this is a simple helper for small/medium code files.
+pub async fn read_file_text(path: String) -> tauri::Result<String> {
+    use std::fs;
+    let text = fs::read_to_string(&path).map_err(AnyError::from)?;
+    Ok(text)
+}
+
 // Directories we don’t care about high-frequency events for – they generate a lot
 // of noise (.git, node_modules…) and rarely matter for IDE operations.
 const IGNORED_DIRS: &[&str] = &["node_modules", ".git", "target"];

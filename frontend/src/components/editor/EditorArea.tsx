@@ -1,4 +1,4 @@
-import { memo, useEffect } from 'react';
+import { memo } from 'react';
 import CodeEditor from '../../features/editor/CodeEditor';
 import EditorTabs from './EditorTabs';
 import { useTabStore } from './tabStore';
@@ -10,15 +10,13 @@ function EditorAreaImpl() {
     updateCode: s.updateTabCode,
   }));
 
-  // Ensure at least one tab open
-  const openTab = useTabStore((s) => s.openTab);
-  useEffect(() => {
-    if (!activeTab) {
-      openTab({ name: 'Untitled' });
-    }
-  }, [activeTab, openTab]);
-
-  if (!activeTab) return null;
+  if (!activeTab) {
+    return (
+      <div className="flex items-center justify-center h-full w-full text-neutral-400 select-none">
+        Open a file to get started
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full w-full min-w-0 min-h-0 rounded-lg border border-neutral-700 bg-neutral-900/60">
@@ -26,11 +24,10 @@ function EditorAreaImpl() {
       <div className="flex-1 min-h-0 min-w-0">
         <CodeEditor
           language={activeTab.language}
+          // Always reflect latest code stored
           initialCode={activeTab.code}
-          /**
-           * Capture edits and sync back into store. In real file integration we’ll debounce & persist.
-           */
           onChange={(val) => updateCode(activeTab.id, val ?? '')}
+          key={activeTab.id /* force remount when switching files so monaco resets */}
         />
       </div>
     </div>

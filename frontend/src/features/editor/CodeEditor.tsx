@@ -8,6 +8,8 @@ import { useWorkspaceRoot } from '../../lib/workspace/workspaceStore';
 export interface CodeEditorProps {
   language?: string;
   initialCode?: string;
+  /** Callback whenever the editor content changes */
+  onChange?: (value: string | undefined) => void;
 }
 
 /**
@@ -16,7 +18,8 @@ export interface CodeEditorProps {
  */
 export default function CodeEditor({
   language = 'typescript',
-  initialCode = '// Start coding…',
+  initialCode = '',
+  onChange,
 }: CodeEditorProps) {
   const root = useWorkspaceRoot();
 
@@ -42,6 +45,7 @@ export default function CodeEditor({
         fontSize: 14,
         minimap: { enabled: false },
       }}
+      onChange={onChange}
       onMount={(editor) => {
         virtualDoc?.attachEditor(editor);
         if (root) {

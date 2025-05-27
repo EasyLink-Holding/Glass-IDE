@@ -20,17 +20,17 @@ export async function loadLanguage(lang: SupportedLanguage): Promise<Parser.Lang
     switch (lang) {
       case 'typescript': {
         const wasmUrl = (
-          await import('tree-sitter-typescript/wasm/tree-sitter-typescript.wasm?url')
+          await import('tree-sitter-typescript/tree-sitter-typescript.wasm?url')
         ).default as string;
         return Parser.Language.load(wasmUrl);
       }
       case 'tsx': {
-        const wasmUrl = (await import('tree-sitter-typescript/wasm/tree-sitter-tsx.wasm?url'))
+        const wasmUrl = (await import('tree-sitter-typescript/tree-sitter-tsx.wasm?url'))
           .default as string;
         return Parser.Language.load(wasmUrl);
       }
       case 'rust': {
-        const wasmUrl = (await import('tree-sitter-rust/wasm/tree-sitter-rust.wasm?url'))
+        const wasmUrl = (await import('tree-sitter-rust/tree-sitter-rust.wasm?url'))
           .default as string;
         return Parser.Language.load(wasmUrl);
       }

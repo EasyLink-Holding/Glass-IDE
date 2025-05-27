@@ -1,4 +1,5 @@
 import preact from '@preact/preset-vite';
+import wasm from '@rollup/plugin-wasm';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { defineConfig, splitVendorChunkPlugin } from 'vite';
 import checker from 'vite-plugin-checker';
@@ -33,6 +34,9 @@ export default defineConfig({
     format: 'es',
   },
   plugins: [
+    // First: WASM support – allows importing .wasm (eg. tree-sitter grammars)
+    // rollup-plugin-wasm handles copying/instantiating in both dev & prod builds
+    wasm(),
     monacoEditorPlugin({
       languageWorkers: ['editorWorkerService', 'css', 'html', 'json', 'typescript'],
     }),
@@ -48,9 +52,11 @@ export default defineConfig({
     // `pnpm build` then open dist/stats.html to audit bundles
     visualizer({ filename: 'dist/stats.html', template: 'treemap', open: false }),
   ],
-
+  // No custom alias; WASM imports point directly to tree-sitter-wasms/out
   build: {
     sourcemap: false, // smaller bundles
+    // Ensure .wasm assets in node_modules (tree-sitter) are copied & hashed
+    assetsInlineLimit: 0, // never inline – keep separate files, caching friendly
     rollupOptions: {
       output: {
         // Custom manual chunk rules to isolate heavy deps
@@ -74,4 +80,6 @@ export default defineConfig({
       },
     },
   },
+  // Treat all .wasm files as static assets so import "?url" works both in dev & build
+  assetsInclude: ['**/*.wasm'],
 });

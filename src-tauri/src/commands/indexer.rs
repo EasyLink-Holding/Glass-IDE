@@ -175,9 +175,15 @@ pub async fn query_index(params: QueryParams) -> tauri::Result<Vec<String>> {
     let mut indices = INDICES.lock().unwrap();
     let idx = ensure_index(&mut indices, &root)?;
 
-    // Early return empty query ⇒ nothing
+    // If query is empty, return first page of all paths
     if query.trim().is_empty() {
-        return Ok(Vec::new());
+        let mut all: Vec<String> = idx.paths.clone();
+        // Shorter paths first, then lexicographic for stability
+        all.sort_by(|a, b| a.len().cmp(&b.len()).then_with(|| a.cmp(b)));
+        let off = offset.unwrap_or(0);
+        let lim = limit.unwrap_or(DEFAULT_PAGE_SIZE);
+        let slice: Vec<String> = all.into_iter().skip(off).take(lim).collect();
+        return Ok(slice);
     }
 
     let matcher = SkimMatcherV2::default();

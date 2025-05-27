@@ -2,6 +2,7 @@ import { listen } from '@tauri-apps/api/event';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { useLayoutStore } from './lib/settings/layoutStore';
+import { isTauri } from './lib/tauri/env';
 import './index.css';
 import App from './App.tsx';
 
@@ -19,11 +20,13 @@ if (rootElement) {
   }
 
   // Listen for reset-layout events from Tauri menu
-  listen('reset-layout', () => {
-    useLayoutStore.getState().resetLayout();
-  }).catch((err) => {
-    console.error('Failed to set up reset-layout listener:', err);
-  });
+  if (isTauri()) {
+    listen('reset-layout', () => {
+      useLayoutStore.getState().resetLayout();
+    }).catch((err) => {
+      console.error('Failed to set up reset-layout listener:', err);
+    });
+  }
 } else {
   console.error('Root element not found, cannot render React app');
 }

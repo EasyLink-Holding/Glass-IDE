@@ -7,10 +7,11 @@
  */
 
 // Using Tauri v2 API structure - import from correct modules
-import { core } from '@tauri-apps/api';
+import { invoke as tauriInvoke } from '@tauri-apps/api/core';
 import { emit, listen } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { runTask } from '../../workers/pool/workerPool';
+import { isTauri } from './env';
 
 // Batch window for collecting commands (milliseconds)
 const BATCH_WINDOW = 25;
@@ -206,8 +207,11 @@ startCacheCleanup();
 // Simple JSON invoke wrapper
 // -------------------------------
 async function invokeSmart<T>(command: string, args: Record<string, unknown>): Promise<T> {
+  if (!isTauri()) {
+    return Promise.reject(new Error('Tauri invoke unavailable in browser'));
+  }
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return core.invoke<T>(command, args);
+  return tauriInvoke<T>(command, args);
 }
 
 /**

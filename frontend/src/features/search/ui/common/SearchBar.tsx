@@ -1,5 +1,5 @@
 import { MagnifyingGlass as MagnifyingGlassIcon } from 'phosphor-react';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { preloadSearch } from '../../../../lib/prefetch/searchPrefetch';
 import { memoIcon } from '../../../../lib/ui/memoIcon';
 import { useWorkspaceRoot } from '../../../../lib/workspace/workspaceStore';
@@ -16,6 +16,11 @@ export default function SearchBar() {
   const [query, setQuery] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const root = useWorkspaceRoot();
+
+  // Debug: log when open/root/query changes
+  useEffect(() => {
+    console.log('[SB] open', open, 'query', query, 'root', root);
+  }, [open, query, root]);
 
   return (
     <div

@@ -28,6 +28,7 @@
     "react-dom": "^19.1.0",
     "react-fast-compare": "^3.2.2",
     "react-window": "^1.8.11",
+    "tree-sitter-wasms": "^0.1.11",
     "@codingame/monaco-jsonrpc": "^0.4.1",
     "monaco-languageclient": "^9.6.0",
     "vscode-jsonrpc": "^8.2.1",

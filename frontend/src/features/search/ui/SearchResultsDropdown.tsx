@@ -20,6 +20,7 @@ function SearchResultsDropdownInner({
   onExpand,
   hasMore,
 }: Props) {
+  console.log('[SR] render', { results: results.length, loading, collapsed, hasMore });
   if (!results.length && !loading) return null;
   // Memo to avoid recomputing slices on each render if inputs unchanged
   const displayResults = useCallback(

@@ -53,6 +53,7 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
     async (page: number) => {
       if (!rootPath) return;
 
+      console.log('[WS] fetchPage', page, 'query', debouncedQuery);
       setLoading(true);
       const currentId = ++requestIdRef.current;
 
@@ -80,6 +81,7 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
         // Ignore if a newer request was issued
         if (currentId !== requestIdRef.current) return;
 
+        console.log('[WS] raw results', raw.length);
         if (page === 0) {
           setResults(raw);
         } else {
@@ -98,11 +100,13 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
 
   // Reset + fetch first page when query or root changes
   useEffect(() => {
+    console.log('[WS] effect trigger root/query', rootPath, debouncedQuery);
     pageRef.current = 0;
     setResults([]);
     setHasMore(false);
 
-    if (!debouncedQuery || !rootPath) return;
+    // Always fetch when a workspace is open; empty query fetches first page of all files
+    if (!rootPath) return;
 
     fetchPage(0);
   }, [debouncedQuery, rootPath, fetchPage]);

@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from 'react';
 import { useAppearanceStore } from '../../lib/settings/appearanceStore';
+import { isTauri } from '../../lib/tauri/env';
 
 // Defer tauri window API until runtime to avoid inlining heavy helpers.
 import type { Window as TauriWindow } from '@tauri-apps/api/window';
@@ -23,6 +24,7 @@ const btnBase = [
  * the IPC bridge is ready before making any calls.
  */
 function WindowControls() {
+  if (!isTauri()) return null; // Do not render in browser
   const hide = useAppearanceStore((state) => state.hideSystemControls);
   // Track window API state
   const [windowInstance, setWindowInstance] = useState<TauriWindow | null>(null);

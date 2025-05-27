@@ -15,6 +15,8 @@
 import type { TokenizationResult } from '@glass/monaco-tokenization';
 import * as monaco from 'monaco-editor';
 import { runTask } from '../../workers/pool/workerPool';
+import type { SupportedLanguage } from '../../workers/treesitter/languages';
+import { registerTreeSitter } from './treesitterAdapter';
 
 // ≈40 KiB on average after gzip – only load when needed.
 const LANGUAGE_IMPORTS: Record<string, () => Promise<unknown>> = {
@@ -38,6 +40,11 @@ export async function ensureLanguage(langId: string): Promise<void> {
     inflight[id] = LANGUAGE_IMPORTS[id]().then(() => void 0);
   }
   await inflight[id];
+
+  // After Monaco grammar ready, hook Tree-sitter semantic tokens if supported
+  if ((['typescript', 'tsx', 'rust'] as SupportedLanguage[]).includes(id as SupportedLanguage)) {
+    registerTreeSitter(id as SupportedLanguage);
+  }
 }
 
 // -----------------------------------------------------------------------------

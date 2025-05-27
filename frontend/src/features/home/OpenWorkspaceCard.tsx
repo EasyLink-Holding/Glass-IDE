@@ -22,15 +22,15 @@ export default function OpenWorkspaceCard() {
           <div className="flex gap-2">
             <Button
               label="Switch Folder…"
-              onClick={() => {
-                void openWorkspace();
+              onClick={async () => {
+                await openWorkspace();
               }}
             />
             <Button
               label="Close Workspace"
               className="bg-neutral-600 hover:bg-neutral-500"
-              onClick={() => {
-                closeWorkspace();
+              onClick={async () => {
+                await closeWorkspace();
               }}
             />
           </div>
@@ -44,8 +44,8 @@ export default function OpenWorkspaceCard() {
           </p>
           <Button
             label="Open Folder…"
-            onClick={() => {
-              void openWorkspace();
+            onClick={async () => {
+              await openWorkspace();
             }}
           />
         </>

@@ -15,6 +15,7 @@ use anyhow::Error as AnyError;
 use dirs_next::cache_dir;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use fuzzy_matcher::FuzzyMatcher;
+use log::{debug, info, warn};
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -142,12 +143,20 @@ fn ensure_index<'a>(
 #[command]
 /// Build (or rebuild) the index for `path`. Returns number of files indexed.
 pub async fn build_index(path: String) -> tauri::Result<usize> {
+    info!("[WORKSPACE-SEARCH] Building index for path: {}", &path);
+    let path_clone = path.clone(); // Clone before moving
     let root = PathBuf::from(path);
     if !root.exists() {
+        warn!("[WORKSPACE-SEARCH] Path does not exist: {}", path_clone);
         return Ok(0);
     }
     let mut indices = INDICES.lock().unwrap();
     let idx = ensure_index(&mut indices, &root)?;
+    info!(
+        "[WORKSPACE-SEARCH] Index built with {} files for {}",
+        idx.paths.len(),
+        path_clone
+    );
     Ok(idx.paths.len())
 }
 
@@ -168,16 +177,56 @@ pub async fn query_index(params: QueryParams) -> tauri::Result<Vec<String>> {
         offset,
         limit,
     } = params;
+
+    debug!(
+        "[WORKSPACE-SEARCH] Query: '{}', Path: {}, Offset: {:?}, Limit: {:?}",
+        &query, &path, offset, limit
+    );
+
+    // Clone path before moving it
+    let path_clone = path.clone();
     let root = PathBuf::from(path);
     if !root.exists() {
+        warn!(
+            "[WORKSPACE-SEARCH] Search path does not exist: {}",
+            path_clone
+        );
         return Ok(Vec::new());
     }
+
     let mut indices = INDICES.lock().unwrap();
     let idx = ensure_index(&mut indices, &root)?;
 
-    // Early return empty query ⇒ nothing
+    // For empty queries, return a limited set of initial results
     if query.trim().is_empty() {
-        return Ok(Vec::new());
+        debug!("[WORKSPACE-SEARCH] Empty query, returning initial results");
+        // Return initial files (sorted by path length) to show something
+        // when the search box is first opened - respect the requested limit
+        let limit_count = limit.unwrap_or(150);
+
+        // Add more detailed logging
+        info!(
+            "[WORKSPACE-SEARCH] Total indexed files: {}",
+            idx.paths.len()
+        );
+
+        // Sort paths by length so shortest (likely most relevant) paths come first
+        let mut sorted_paths = idx.paths.clone();
+        sorted_paths.sort_by_key(|path| path.len());
+
+        // Take the first few sorted paths
+        let initial_results: Vec<String> = sorted_paths.iter().take(limit_count).cloned().collect();
+
+        // Log each result for debugging
+        for (i, path) in initial_results.iter().enumerate() {
+            debug!("[WORKSPACE-SEARCH] Result {}: {}", i, path);
+        }
+
+        info!(
+            "[WORKSPACE-SEARCH] Empty query returned {} initial results",
+            initial_results.len()
+        );
+        return Ok(initial_results);
     }
 
     let matcher = SkimMatcherV2::default();
@@ -213,11 +262,22 @@ pub async fn query_index(params: QueryParams) -> tauri::Result<Vec<String>> {
     let off = offset.unwrap_or(0);
     let lim = limit.unwrap_or(DEFAULT_PAGE_SIZE);
 
+    // Count results before consuming the iterator
+    let scored_len = scored.len();
+
     let sliced: Vec<String> = scored
         .into_iter()
         .skip(off)
         .take(lim)
         .map(|(p, _)| p.clone())
         .collect();
+
+    info!(
+        "[WORKSPACE-SEARCH] Query: '{}' returned {} results (from {} matches total)",
+        query,
+        sliced.len(),
+        scored_len
+    );
+
     Ok(sliced)
 }

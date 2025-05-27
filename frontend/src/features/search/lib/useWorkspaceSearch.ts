@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { batchedInvoke } from '../../../lib/tauri/batchedCommunication';
+import { terminalLogger } from '../../../lib/tauri/consoleLogger';
 import { runTask } from '../../../workers/pool/workerPool';
 
 // Small debounce helper – waits `delay` ms after the last call before firing
@@ -38,11 +39,22 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
   // Kick off index build once.
   useEffect(() => {
     if (!builtRef.current && rootPath) {
+      terminalLogger.log(`[SEARCH] Initiating index build for workspace: ${rootPath}`);
       builtRef.current = true;
       // Fire & forget – result not needed here
-      void batchedInvoke<number>('build_index', { path: rootPath }).catch((err) => {
-        console.error('Failed to build index', err);
-      });
+      void batchedInvoke<number>('build_index', { path: rootPath })
+        .then((numFiles) => {
+          terminalLogger.log(
+            `[SEARCH] Index build completed for ${rootPath}: ${numFiles} files indexed`
+          );
+        })
+        .catch((err) => {
+          terminalLogger.error('[SEARCH] Failed to build index', err);
+        });
+    } else if (!rootPath) {
+      terminalLogger.log('[SEARCH] No workspace root provided, skipping index build');
+    } else if (builtRef.current) {
+      terminalLogger.log('[SEARCH] Index already built for this session, skipping');
     }
   }, [rootPath]);
 
@@ -51,46 +63,85 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
 
   const fetchPage = useCallback(
     async (page: number) => {
-      if (!rootPath) return;
+      if (!rootPath) {
+        terminalLogger.log('[SEARCH] Cannot fetch results: No workspace root provided');
+        return;
+      }
 
+      terminalLogger.log(
+        `[SEARCH] Fetching page ${page} for query: "${debouncedQuery}" in ${rootPath}`
+      );
       setLoading(true);
       const currentId = ++requestIdRef.current;
 
       try {
+        const startTime = Date.now();
+        terminalLogger.log(`[SEARCH] Starting query execution (page ${page})`);
         let raw: string[] = await batchedInvoke('query_index', {
-          path: rootPath,
-          query: debouncedQuery,
-          offset: page * PAGE_SIZE,
-          limit: PAGE_SIZE,
+          params: {
+            path: rootPath,
+            query: debouncedQuery,
+            offset: page * PAGE_SIZE,
+            limit: PAGE_SIZE,
+          },
         });
+        const duration = Date.now() - startTime;
+        terminalLogger.log(`[SEARCH] Query execution time: ${duration}ms (page ${page})`);
+        terminalLogger.log(`[SEARCH] Raw results received: ${raw.length} items`);
+
+        // Detailed logging of received data
+        if (raw.length > 0) {
+          terminalLogger.log(`[SEARCH] Result sample: ${raw.slice(0, 3).join(', ')}`);
+        } else {
+          terminalLogger.warn('[SEARCH] Warning: Empty results array received from backend');
+          terminalLogger.log(`[SEARCH] Debug info - Query: "${debouncedQuery}", Path: ${rootPath}`);
+        }
 
         // Local fuzzy re-ranking in a background worker for extra snappiness
         if (debouncedQuery) {
           try {
+            const rankStart = Date.now();
+            terminalLogger.log('[SEARCH] Starting client-side re-ranking');
             raw = await runTask<string[]>('heavyFilterSort', {
               items: raw,
               query: debouncedQuery,
               limit: PAGE_SIZE,
             });
+            terminalLogger.log(
+              `[SEARCH] Client-side re-ranking completed in ${Date.now() - rankStart}ms`
+            );
           } catch (err) {
-            console.warn('Worker heavyFilterSort failed – falling back to raw order', err);
+            terminalLogger.warn(
+              '[SEARCH] Worker heavyFilterSort failed – falling back to raw order',
+              err
+            );
           }
         }
 
         // Ignore if a newer request was issued
-        if (currentId !== requestIdRef.current) return;
+        if (currentId !== requestIdRef.current) {
+          terminalLogger.log('[SEARCH] Request superseded by newer query, discarding results');
+          return;
+        }
 
         if (page === 0) {
+          terminalLogger.log(`[SEARCH] Setting initial results: ${raw.length} items`);
           setResults(raw);
         } else {
+          terminalLogger.log(`[SEARCH] Appending page ${page} results: ${raw.length} items`);
           setResults((prev) => [...prev, ...raw]);
         }
 
-        setHasMore(raw.length === PAGE_SIZE);
+        const hasMoreItems = raw.length === PAGE_SIZE;
+        terminalLogger.log(`[SEARCH] Has more results: ${hasMoreItems}`);
+        setHasMore(hasMoreItems);
       } catch (err) {
-        console.error('query_index failed', err);
+        terminalLogger.error('[SEARCH] query_index failed', err);
       } finally {
-        if (currentId === requestIdRef.current) setLoading(false);
+        if (currentId === requestIdRef.current) {
+          terminalLogger.log('[SEARCH] Search complete, updating loading state');
+          setLoading(false);
+        }
       }
     },
     [rootPath, debouncedQuery]
@@ -98,12 +149,21 @@ export function useWorkspaceSearch(rootPath: string, query: string): SearchState
 
   // Reset + fetch first page when query or root changes
   useEffect(() => {
+    terminalLogger.log(
+      `[SEARCH] Query or root changed - Query: "${debouncedQuery}", Root: ${rootPath}`
+    );
     pageRef.current = 0;
     setResults([]);
     setHasMore(false);
 
-    if (!debouncedQuery || !rootPath) return;
+    // We need the root path, but empty query is ok for initial results
+    if (!rootPath) {
+      terminalLogger.log('[SEARCH] Skipping search - no workspace root');
+      return;
+    }
 
+    // Always perform a search even with empty query to show initial results
+    terminalLogger.log('[SEARCH] Triggering initial search');
     fetchPage(0);
   }, [debouncedQuery, rootPath, fetchPage]);
 

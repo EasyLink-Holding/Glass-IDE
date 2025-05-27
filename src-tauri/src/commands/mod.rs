@@ -13,3 +13,4 @@ pub mod indexer;
 
 // Content search indexer
 pub mod content_indexer;
+pub mod logger;

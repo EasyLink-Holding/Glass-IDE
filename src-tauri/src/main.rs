@@ -8,7 +8,16 @@ mod menu;
 use tauri::Manager;
 
 fn main() {
+    // Initialize the logger
     tauri::Builder::default()
+        // Add the log plugin with stdout target
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Stdout,
+                ))
+                .build(),
+        )
         .plugin(tauri_plugin_dialog::init())
         // Register individual command handlers
         .invoke_handler(tauri::generate_handler![
@@ -22,6 +31,8 @@ fn main() {
             // Content indexer
             commands::content_indexer::build_content_index,
             commands::content_indexer::query_content_index,
+            // Frontend logging
+            commands::logger::frontend_log,
             // ---------------- LSP ----------------
             lsp::invoke_lsp,
         ])
